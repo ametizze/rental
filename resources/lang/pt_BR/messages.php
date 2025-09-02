@@ -1,0 +1,20 @@
+<?php
+return [
+    'brand' => 'EasyRental',
+    'dashboard' => 'Painel',
+    'customers' => 'Clientes',
+    'assets' => 'Equipamentos',
+    'rentals' => 'Aluguéis',
+    'new' => 'Novo',
+    'edit' => 'Editar',
+    'save' => 'Salvar',
+    'cancel' => 'Cancelar',
+    'view' => 'Ver',
+    'search_placeholder' => 'Buscar...',
+    'select_tenant' => 'Selecione um tenant para continuar.',
+    'user' => 'Usuário',
+    'language' => 'Idioma',
+    'english' => 'Inglês',
+    'portuguese' => 'Português (Brasil)',
+    'spanish' => 'Espanhol',
+];

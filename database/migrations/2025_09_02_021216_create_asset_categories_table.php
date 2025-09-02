@@ -6,22 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('asset_photos', function (Blueprint $table) {
+        Schema::create('asset_categories', function (Blueprint $table) {
             $table->id();
+            $table->unsignedBigInteger('tenant_id'); // keep tenant scoping simple
+            $table->string('name', 120);
             $table->timestamps();
+            $table->softDeletes();
+
+            $table->unique(['tenant_id', 'name']);
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('asset_photos');
+        Schema::dropIfExists('asset_categories');
     }
 };

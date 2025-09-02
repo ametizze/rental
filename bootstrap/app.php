@@ -16,7 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->appendToGroup('web', [
-            \App\Http\Middleware\SetTenant::class,
+            \App\Http\Middleware\SetTenant::class,   // your minimal tenant middleware
+            \App\Http\Middleware\SetLocale::class,   // locale after tenant is fine
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
