@@ -14,19 +14,20 @@
 </head>
 
 <body>
+    {{-- resources/views/layouts/app.blade.php --}}
     <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold" href="{{ url('/') }}">Rental MVP</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"
-                aria-controls="nav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div id="nav" class="collapse navbar-collapse">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item"><a class="nav-link" href="{{ route('customers.index') }}">Clientes</a></li>
+                    {{-- adicione links dos próximos módulos aqui --}}
                 </ul>
-                <div class="d-flex small text-muted">
-                    tenant: {{ session('tenant_id', 1) }}
+                <div class="d-flex align-items-center gap-2">
+                    <livewire:tenant.switcher />
                 </div>
             </div>
         </div>

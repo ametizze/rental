@@ -15,6 +15,7 @@ class TenantSeeder extends Seeder
     {
         Tenant::firstOrCreate(['id' => 1], [
             'name' => 'EasyRental',
+            'slug' => 'easy-rental',
             'settings' => [
                 'currency' => 'USD',
                 'timezone' => 'America/New_York',

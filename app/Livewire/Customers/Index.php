@@ -21,14 +21,10 @@ class Index extends Component
 
     public function render()
     {
-        // $tenantId = session('tenant_id', 1);
-        $tenantId = request()->attributes->get('tenant_id')
-            ?? session('tenant_id')
-            ?? optional(auth()->user())->tenant_id
-            ?? 1;
+        $tid = tenant_id();
 
-        $customers = Customer::query()
-            ->where('tenant_id', $tenantId)
+        $customers = \App\Models\Customer::query()
+            ->when($tid, fn($q) => $q->where('tenant_id', $tid))
             ->when(
                 $this->q,
                 fn($q) =>

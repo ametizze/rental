@@ -17,13 +17,19 @@ class CustomerController extends Controller
         return view('customers.create');
     }
 
-    public function show(Customer $customer)
+    public function show(\App\Models\Customer $customer)
     {
+        if (tenant_id() && $customer->tenant_id !== tenant_id()) {
+            abort(404);
+        }
         return view('customers.show', compact('customer'));
     }
 
-    public function edit(Customer $customer)
+    public function edit(\App\Models\Customer $customer)
     {
+        if (tenant_id() && $customer->tenant_id !== tenant_id()) {
+            abort(404);
+        }
         return view('customers.edit', compact('customer'));
     }
 }

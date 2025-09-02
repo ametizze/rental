@@ -8,45 +8,32 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SetTenant
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
-     */
     public function handle(Request $request, Closure $next)
     {
-        // Set tenant id
-        // Resolve tenant id in priority order:
-        // 1) route parameter (tenant or tenant_id)
-        // 2) X-Tenant-ID header
-        // 3) tenant_id query string
-        // 4) authenticated user's tenant_id
-        // 5) numeric subdomain (e.g. 123.example.com)
-        // 6) fallback to 1
-        $tenantId = $request->route('tenant_id') ?? $request->route('tenant') ?? $request->header('X-Tenant-ID') ?? $request->query('tenant_id');
+        // prioridade: rota > header > query > auth > sessão atual
+        $route     = $request->route();
+        $candidate = $route?->parameter('tenant_id')
+            ?? $route?->parameter('tenant')
+            ?? $request->header('X-Tenant-ID')
+            ?? $request->header('X-Tenant')
+            ?? $request->query('tenant_id')
+            ?? $request->query('tenant')
+            ?? (auth()->check() ? (auth()->user()->tenant_id ?? null) : null)
+            ?? session('tenant_id');
 
-        if (! $tenantId && auth()->check()) {
-            $tenantId = auth()->user()->tenant_id ?? null;
-        }
+        $id = $this->toInt($candidate); // só aceita números; nada de slug/subdomínio
 
-        if (! $tenantId) {
-            $host = $request->getHost();
-            $parts = explode('.', $host);
-            if (count($parts) > 2) {
-                $subdomain = $parts[0];
-                if (filter_var($subdomain, FILTER_VALIDATE_INT) !== false) {
-                    $tenantId = (int) $subdomain;
-                }
-            }
-        }
-
-        // Ensure we have an integer tenant id (fallback to 1)
-        $tenantId = filter_var($tenantId, FILTER_VALIDATE_INT) !== false ? (int) $tenantId : 1;
-
-        if (! session()->has('tenant_id') || session('tenant_id') !== $tenantId) {
-            session(['tenant_id' => $tenantId]);
+        if (!is_null($id)) {
+            session(['tenant_id' => $id]);
         }
 
         return $next($request);
+    }
+
+    private function toInt($value): ?int
+    {
+        return (is_int($value) || (is_string($value) && ctype_digit($value)))
+            ? (int) $value
+            : null;
     }
 }

@@ -9,6 +9,6 @@ class Tenant extends Model
 {
     use SoftDeletes;
 
-    protected $fillable = ['name', 'settings'];
+    protected $fillable = ['name', 'slug', 'settings'];
     protected $casts = ['settings' => 'array'];
 }

@@ -34,12 +34,13 @@ class Form extends Component
 
     public function rules()
     {
-        $tenantId = session('tenant_id', 1);
+        $tid = tenant_id();
         return [
             'code' => [
                 'required',
                 'max:30',
-                Rule::unique('customers')->where(fn($q) => $q->where('tenant_id', $tenantId))
+                \Illuminate\Validation\Rule::unique('customers')
+                    ->where(fn($q) => $q->where('tenant_id', $tid))
                     ->ignore($this->customerId),
             ],
             'name' => ['required', 'max:180'],
@@ -52,10 +53,16 @@ class Form extends Component
 
     public function save()
     {
-        $data = $this->validate();
-        $data['tenant_id'] = session('tenant_id', 1);
+        $tid = tenant_id();
+        if (!$tid) {
+            $this->addError('tenant', 'Selecione um tenant para salvar.');
+            return;
+        }
 
-        $customer = Customer::updateOrCreate(
+        $data = $this->validate();
+        $data['tenant_id'] = $tid;
+
+        $customer = \App\Models\Customer::updateOrCreate(
             ['id' => $this->customerId],
             $data
         );
