@@ -1,5 +1,6 @@
 <?php
 
+use App\Livewire\CustomerManager;
 use App\Livewire\EquipmentManager;
 use App\Livewire\TenantManager;
 use Illuminate\Support\Facades\Route;
@@ -20,4 +21,6 @@ Route::get('/login-as-superadmin', function () {
     return redirect('/tenants');
 });
 
-Route::get('/equipment', EquipmentManager::class)->middleware('auth');
+Route::get('/invoices', InvoiceManager::class)->middleware('auth');
+Route::get('/customers', CustomerManager::class)->middleware('auth');
+Route::get('/equipments', EquipmentManager::class)->middleware('auth');
