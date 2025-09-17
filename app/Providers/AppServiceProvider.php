@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +20,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Create app('currentTenant') if it doesn't exist
+        if (Schema::hasTable('tenants')) {
+            app()->singleton('currentTenant', function () {
+                return auth()->check() ? Tenant::find(auth()->user()->tenant_id) : null;
+            });
+        }
     }
 }
