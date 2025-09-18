@@ -31,7 +31,6 @@ class InvoiceManager extends Component
 
     public function mount()
     {
-        // Padrão para a taxa de imposto do tenant, se existir.
         $this->tax_rate = optional(auth()->user()->tenant)->settings['tax_rate'] ?? 0;
 
         $this->addItem();
@@ -114,7 +113,7 @@ class InvoiceManager extends Component
     public function render()
     {
         $customers = Customer::all();
-        $invoices = Invoice::with('customer')->paginate(10);
+        $invoices = Invoice::with('customer')->latest()->paginate(20);
 
         return view('livewire.invoice-manager', [
             'customers' => $customers,

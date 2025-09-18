@@ -22,7 +22,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             TenantSeeder::class,
-            SuperadminSeeder::class
+            UserSeeder::class, // Includes superadmin and admin
+            DummyDataSeeder::class,
         ]);
     }
 }

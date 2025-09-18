@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
@@ -26,5 +27,16 @@ class AppServiceProvider extends ServiceProvider
                 return auth()->check() ? Tenant::find(auth()->user()->tenant_id) : null;
             });
         }
+
+        // Gates
+        // Define Gate 'manage-tenants'
+        Gate::define('manage-tenants', function ($user) {
+            return $user->role === 'superadmin';
+        });
+
+        // Define Gate 'manage-users'
+        Gate::define('manage-users', function ($user) {
+            return in_array($user->role, ['superadmin', 'admin']);
+        });
     }
 }

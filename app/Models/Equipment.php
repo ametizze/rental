@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTenant;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Equipment extends Model
 {
+    use HasTenant;
+
     protected $fillable = [
         'name',
         'category',
@@ -25,5 +28,10 @@ class Equipment extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function rentals(): BelongsToMany
+    {
+        return $this->belongsToMany(Rental::class, 'equipment_rental');
     }
 }

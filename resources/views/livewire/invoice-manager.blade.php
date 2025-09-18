@@ -54,7 +54,8 @@
                                                 <input type="number" step="0.01" class="form-control"
                                                     wire:model.live="invoiceItems.{{ $index }}.rate">
                                             </td>
-                                            <td>${{ number_format($item['quantity'] * $item['rate'], 2) }}</td>
+                                            <td>${{ number_format((float) $item['quantity'] * (float) $item['rate'], 2) }}
+                                            </td>
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-danger"
                                                     wire:click="removeItem({{ $index }})">
@@ -130,8 +131,10 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <button class="btn btn-sm btn-info">{{ __('View') }}</button>
-                                    <button class="btn btn-sm btn-success">{{ __('Mark as Paid') }}</button>
+                                    <a href="{{ route('invoices.show', ['invoice' => $invoice->uuid]) }}"
+                                        class="btn btn-sm btn-info">{{ __('View') }}</a>
+                                    <button wire:click="markAsPaid({{ $invoice->id }})"
+                                        class="btn btn-sm btn-success">{{ __('Mark as Paid') }}</button>
                                 </td>
                             </tr>
                         @endforeach

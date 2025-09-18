@@ -16,7 +16,7 @@ class TenantSeeder extends Seeder
         Tenant::create([
             'name' => 'EasyRental Demo Company',
             'domain' => 'demo',
-            'email' => 'rental@multisystem.cloud',
+            'email' => 'contact@easyrental.com',
             'phone' => '+1 (555) 123-4567',
             'address' => '123 Main Street',
             'city' => 'Anytown',

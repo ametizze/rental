@@ -77,6 +77,7 @@
                             <th>{{ __('Serial') }}</th>
                             <th>{{ __('Daily Rate') }}</th>
                             <th>{{ __('Status') }}</th>
+                            <th>{{ __('QR Code') }}</th>
                             <th>{{ __('Actions') }}</th>
                         </tr>
                     </thead>
@@ -95,6 +96,15 @@
                                     <span class="badge bg-{{ $item->status == 'available' ? 'success' : 'danger' }}">
                                         {{ __(ucfirst($item->status)) }}
                                     </span>
+                                </td>
+                                <td class="text-center">
+                                    @if ($item->qr_uuid)
+                                        <a href="{{ route('public.equipment', ['uuid' => $item->qr_uuid]) }}"
+                                            target="_blank">
+                                            <img
+                                                src="data:image/png;base64,{{ base64_encode(QrCode::format('png')->size(60)->generate(route('public.equipment', ['uuid' => $item->qr_uuid]))) }}">
+                                        </a>
+                                    @endif
                                 </td>
                                 <td>
                                     <button wire:click="edit({{ $item->id }})"

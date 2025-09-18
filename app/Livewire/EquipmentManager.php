@@ -7,6 +7,7 @@ use App\Models\Equipment;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Str;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class EquipmentManager extends Component
 {
@@ -14,6 +15,7 @@ class EquipmentManager extends Component
 
     public $equipmentId;
     public $name, $category, $serial, $daily_rate, $photo, $status = 'available';
+    public $qrCode;
 
     // Propriedade para a foto existente (para edição)
     public $existingPhoto;
@@ -29,6 +31,10 @@ class EquipmentManager extends Component
 
     public function save()
     {
+        // Regra de validação para o serial, garantindo que ele seja único,
+        // mas permitindo que o serial atual do equipamento editado seja usado.
+        $this->rules['serial'] = 'required|string|unique:equipment,serial,' . $this->equipmentId;
+
         $this->validate();
 
         $data = [
@@ -37,8 +43,14 @@ class EquipmentManager extends Component
             'serial' => $this->serial,
             'daily_rate' => $this->daily_rate,
             'status' => $this->status,
-            'qr_uuid' => (string) Str::uuid(),
         ];
+
+        // Se estivermos editando, não altere o QR UUID.
+        // Se estivermos criando, gere um novo.
+        if (!$this->equipmentId) {
+            $data['qr_uuid'] = (string) Str::uuid();
+            $data['tenant_id'] = auth()->user()->tenant_id;
+        }
 
         // Lida com o upload de foto
         if ($this->photo) {
@@ -46,6 +58,10 @@ class EquipmentManager extends Component
         }
 
         Equipment::updateOrCreate(['id' => $this->equipmentId], $data);
+
+        session()->flash('success', $this->equipmentId ? 'Equipamento atualizado com sucesso!' : 'Equipamento criado com sucesso!');
+
+        // Resetar o formulário após o salvamento
         $this->resetForm();
     }
 
@@ -60,14 +76,14 @@ class EquipmentManager extends Component
         $this->existingPhoto = $equipment->photo;
     }
 
-    public function delete($id)
-    {
-        Equipment::destroy($id);
-    }
-
     public function resetForm()
     {
         $this->reset(['name', 'category', 'serial', 'daily_rate', 'photo', 'status', 'equipmentId', 'existingPhoto']);
+    }
+
+    public function delete($id)
+    {
+        Equipment::destroy($id);
     }
 
     public function render()
