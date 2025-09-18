@@ -14,7 +14,11 @@ use App\Models\Equipment;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', fn() => view('welcome'))->name('home');
+Route::get('/', function () {
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
+})->name('home');
 
 Route::get('/validator/{uuid}', function ($uuid) {
     $equipment = Equipment::where('qr_uuid', $uuid)->firstOrFail();
