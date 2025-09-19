@@ -20,10 +20,9 @@ class EquipmentManager extends Component
     public $existingPhoto;
 
     /**
-     * Photo validation: allow up to 16MB (16384 KB).
+     * Photo validation: allow up to 32MB (32768 KB).
      * Note: Laravel's "max" for files is in kilobytes.
      */
-    #[Validate('nullable|image|max:16384')]
     public $photo;
 
     protected function rules()
@@ -33,6 +32,7 @@ class EquipmentManager extends Component
             'category'   => 'nullable|string|max:255',
             'serial'     => 'required|string|unique:equipment,serial,' . $this->equipmentId,
             'daily_rate' => 'required|numeric|min:0',
+            'photo'      => 'nullable|image|mimes:png,jpg,jpeg,heic|max:32768', // 32MB
             'status'     => 'required|string',
         ];
     }
@@ -71,7 +71,7 @@ class EquipmentManager extends Component
 
         Equipment::updateOrCreate(['id' => $this->equipmentId], $data);
 
-        session()->flash('success', $this->equipmentId ? 'Equipamento atualizado com sucesso!' : 'Equipamento criado com sucesso!');
+        session()->flash('success', $this->equipmentId ? __('Equipment updated successfully!') : __('Equipment created successfully!'));
         $this->resetForm();
     }
 
