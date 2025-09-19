@@ -1,10 +1,10 @@
 <div>
-    <div class="container mt-4">
+    <div class="container my-5">
         <h2 class="mb-4">{{ __('Equipment Management') }}</h2>
 
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                {{ $equipmentId ? __('Edit Equipment') : __('New Equipment') }}
+                {{ __('New Equipment') }}
             </div>
             <div class="card-body">
                 <form wire:submit.prevent="save">
@@ -16,6 +16,7 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+
                         <div class="col-md-6">
                             <label class="form-label">{{ __('Serial') }}</label>
                             <input type="text" class="form-control" wire:model.defer="serial">
@@ -23,6 +24,7 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+
                         <div class="col-md-6">
                             <label class="form-label">{{ __('Daily Rate') }}</label>
                             <input type="text" class="form-control" wire:model.defer="daily_rate">
@@ -30,10 +32,15 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+
                         <div class="col-md-6">
                             <label class="form-label">{{ __('Category') }}</label>
                             <input type="text" class="form-control" wire:model.defer="category">
+                            @error('category')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
+
                         <div class="col-md-6">
                             <label class="form-label">{{ __('Status') }}</label>
                             <select class="form-control" wire:model.defer="status">
@@ -41,13 +48,27 @@
                                 <option value="rented">{{ __('Rented') }}</option>
                                 <option value="maintenance">{{ __('Maintenance') }}</option>
                             </select>
+                            @error('status')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
                         </div>
+
                         <div class="col-md-6">
                             <label class="form-label">{{ __('Photo') }}</label>
-                            <input type="file" class="form-control" wire:model="photo">
+
+                            {{-- Hint: "accept" + "capture" help mobile browsers offer camera/gallery --}}
+                            <input type="file" class="form-control" wire:model="photo" accept="image/*"
+                                capture="environment">
+
+                            {{-- Upload state and validation errors --}}
+                            <div wire:loading wire:target="photo" class="mt-2 text-muted">
+                                {{ __('Uploading photo...') }}
+                            </div>
                             @error('photo')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
+
+                            {{-- Preview: temporary (new upload) or existing --}}
                             @if ($photo)
                                 <img src="{{ $photo->temporaryUrl() }}" class="img-fluid mt-2"
                                     style="max-height: 150px;">
@@ -55,12 +76,20 @@
                                 <img src="{{ asset('storage/' . $existingPhoto) }}" class="img-fluid mt-2"
                                     style="max-height: 150px;">
                             @endif
+
+                            {{-- Optional UX tip for users on mobile --}}
+                            <div class="form-text">
+                                {{ __('Tip: On mobile, you can take a photo or choose from the gallery.') }}
+                            </div>
                         </div>
                     </div>
+
                     <button type="submit" class="btn btn-success mt-4">{{ __('Save') }}</button>
+
                     @if ($equipmentId)
-                        <button type="button" wire:click="resetForm"
-                            class="btn btn-secondary mt-4">{{ __('Cancel') }}</button>
+                        <button type="button" wire:click="resetForm" class="btn btn-secondary mt-4">
+                            {{ __('Cancel') }}
+                        </button>
                     @endif
                 </form>
             </div>
@@ -77,7 +106,6 @@
                             <th>{{ __('Serial') }}</th>
                             <th>{{ __('Daily Rate') }}</th>
                             <th>{{ __('Status') }}</th>
-                            <th>{{ __('QR Code') }}</th>
                             <th>{{ __('Actions') }}</th>
                         </tr>
                     </thead>
@@ -97,20 +125,13 @@
                                         {{ __(ucfirst($item->status)) }}
                                     </span>
                                 </td>
-                                <td class="text-center">
-                                    @if ($item->qr_uuid)
-                                        <a href="{{ route('public.equipment', ['uuid' => $item->qr_uuid]) }}"
-                                            target="_blank">
-                                            <img
-                                                src="data:image/png;base64,{{ base64_encode(QrCode::format('png')->size(60)->generate(route('public.equipment', ['uuid' => $item->qr_uuid]))) }}">
-                                        </a>
-                                    @endif
-                                </td>
                                 <td>
-                                    <button wire:click="edit({{ $item->id }})"
-                                        class="btn btn-sm btn-warning">{{ __('Edit') }}</button>
-                                    <button wire:click="delete({{ $item->id }})"
-                                        class="btn btn-sm btn-danger">{{ __('Delete') }}</button>
+                                    <button wire:click="edit({{ $item->id }})" class="btn btn-sm btn-warning">
+                                        {{ __('Edit') }}
+                                    </button>
+                                    <button wire:click="delete({{ $item->id }})" class="btn btn-sm btn-danger">
+                                        {{ __('Delete') }}
+                                    </button>
                                 </td>
                             </tr>
                         @endforeach
@@ -119,5 +140,4 @@
             </div>
         </div>
     </div>
-
 </div>
