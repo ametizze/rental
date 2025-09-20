@@ -101,6 +101,7 @@
                 <table class="table table-striped">
                     <thead>
                         <tr>
+                            <th>{{ __('QR Code') }}</th>
                             <th>{{ __('Photo') }}</th>
                             <th>{{ __('Name') }}</th>
                             <th>{{ __('Serial') }}</th>
@@ -112,6 +113,15 @@
                     <tbody>
                         @foreach ($equipment as $item)
                             <tr>
+                                <td>
+                                    @if ($item->qr_uuid)
+                                        <a href="{{ route('public.equipment', ['uuid' => $item->qr_uuid]) }}"
+                                            target="_blank">
+                                            <img
+                                                src="data:image/png;base64,{{ base64_encode(QrCode::format('png')->size(60)->generate(route('public.equipment', ['uuid' => $item->qr_uuid]))) }}">
+                                        </a>
+                                    @endif
+                                </td>
                                 <td>
                                     @if ($item->photo)
                                         <img src="{{ asset('storage/' . $item->photo) }}" style="width: 50px;">
