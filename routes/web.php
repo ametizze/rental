@@ -9,6 +9,7 @@ use App\Livewire\RentalManager;
 use App\Livewire\ShowInvoice;
 use App\Livewire\ShowRental;
 use App\Livewire\TenantManager;
+use App\Livewire\TransactionManager;
 use App\Livewire\UserManager;
 use App\Models\Equipment;
 use App\Models\Invoice;
@@ -51,6 +52,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Reports
     Route::get('/reports/customer-balance', CustomerBalance::class)->name('reports.customer-balance')->middleware('auth');
+
+    // Transactions
+    Route::get('/transactions', TransactionManager::class)->name('transactions')->middleware('auth');
 
     Route::middleware('can:manage-tenants')->group(function () {
         Route::get('/tenants', TenantManager::class)->name('tenants');

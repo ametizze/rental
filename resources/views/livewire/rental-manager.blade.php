@@ -55,7 +55,7 @@
                                         $isSelected = in_array($item->id, $selected_equipment);
                                     @endphp
                                     <div class="col-6 col-sm-4 col-md-3">
-                                        <div class="card h-100 position-relative cursor-pointer @if ($isSelected) border-success border-3 @endif"
+                                        <div class="card h-100 position-relative @if ($isSelected) border-success border-3 @endif"
                                             wire:click="toggleEquipmentSelection({{ $item->id }})">
                                             @if ($isSelected)
                                                 <span
@@ -64,7 +64,7 @@
                                                 </span>
                                             @endif
                                             <img src="{{ asset('storage/' . $item->photo) }}" class="card-img-top"
-                                                alt="{{ $item->name }}" style="height: 150px; object-fit: cover;">
+                                                alt="{{ $item->name }}" style="height: 180px; object-fit:contain;">
                                             <div class="card-body d-flex flex-column">
                                                 <h5 class="card-title">{{ $item->name }}</h5>
                                                 <p class="card-text text-muted mb-auto">({{ $item->serial }})</p>
@@ -148,8 +148,10 @@
                                         <button wire:click="openCompleteRentalModal({{ $rental->id }})"
                                             class="btn btn-sm btn-success">{{ __('Complete') }}</button>
                                     @endif
-                                    <a href="{{ route('rentals.details', ['uuid' => $rental->uuid]) }}"
-                                        class="btn btn-sm btn-info">{{ __('View') }}</a>
+                                    @if ($rental->uuid)
+                                        <a href="{{ route('rentals.details', ['uuid' => $rental->uuid]) }}"
+                                            class="btn btn-sm btn-info">{{ __('View') }}</a>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach

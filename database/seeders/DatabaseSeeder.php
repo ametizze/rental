@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             TenantSeeder::class,
             UserSeeder::class, // Includes superadmin and admin
             DummyDataSeeder::class,
+            TransactionSeeder::class
         ]);
     }
 }

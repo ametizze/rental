@@ -102,5 +102,14 @@
     "Start of Rental": "Início do Aluguel",
     "End of Rental": "Fim do Aluguel",
     "Start Photos": "Fotos de Início",
-    "End Photos": "Fotos de Retorno"
+    "End Photos": "Fotos de Retorno",
+    "Transaction Management": "Gerenciamento de Transações",
+    "New Transaction": "Nova Transação",
+    "Edit Transaction": "Editar Transação",
+    "Type": "Tipo",
+    "Date": "Data",
+    "All Transactions": "Todas as Transações",
+    "Expense": "Despesa",
+    "Income": "Receita",
+    "Transação criada com sucesso!": "Transação criada com sucesso!"
 }

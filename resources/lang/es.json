@@ -92,5 +92,14 @@
     "Profile": "Perfil",
     "Email Address": "Dirección de Correo",
     "Remember me": "Recordarme",
-    "auth.failed": "Estas credenciales no coinciden con nuestros registros."
+    "auth.failed": "Estas credenciales no coinciden con nuestros registros.",
+    "Transaction Management": "Gestión de Transacciones",
+    "New Transaction": "Nueva Transacción",
+    "Edit Transaction": "Editar Transacción",
+    "Type": "Tipo",
+    "Date": "Fecha",
+    "All Transactions": "Todas las Transacciones",
+    "Expense": "Gasto",
+    "Income": "Ingreso",
+    "Transação criada com sucesso!": "Transacción creada exitosamente!"
 }
