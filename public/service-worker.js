@@ -1,4 +1,4 @@
-const CACHE_NAME = 'easy-rental-v1';
+const CACHE_NAME = 'easy-rental-v1.0.0';
 const urlsToCache = [
     '/',
     '/icons/icon-192x192.png' // Main icon
