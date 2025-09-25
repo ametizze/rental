@@ -66,7 +66,10 @@ class EquipmentManager extends Component
             // });
 
             // Resize based on width only, auto height
-            $image->resize(width: 1024);
+            // $image->resize(width: 1024);
+
+            // Scale down to a width of 1024, if necessary, maintaining aspect ratio
+            $image->scaleDown(width: 1024);
 
             $filename = Str::random(40) . '.' . $this->photo->getClientOriginalExtension();
             $path = 'equipment_photos/' . $filename;
