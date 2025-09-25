@@ -32,7 +32,7 @@ class EquipmentManager extends Component
             'category'   => 'nullable|string|max:255',
             'serial'     => 'required|string|unique:equipment,serial,' . $this->equipmentId,
             'daily_rate' => 'required|numeric|min:0',
-            'photo'      => 'nullable|image|mimes:png,jpg,jpeg,heic|max:32768', // 32MB
+            'photo'      => 'nullable|image|mimes:png,jpg,jpeg,heic|max:16384', // Max 16mb
             'status'     => 'required|string',
         ];
     }
@@ -59,7 +59,7 @@ class EquipmentManager extends Component
             $manager = new ImageManager(new Driver());
             $image = $manager->read($this->photo->getRealPath());
             // Resize based on width, constrain aspect ratio (auto height)
-            $image->resize(800, null, function ($constraint) {
+            $image->resize(1024, null, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
