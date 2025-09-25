@@ -149,8 +149,8 @@
                                             class="btn btn-sm btn-success">{{ __('Complete') }}</button>
                                     @endif
                                     @if ($rental->uuid)
-                                        <a href="{{ route('rentals.details', ['uuid' => $rental->uuid]) }}"
-                                            class="btn btn-sm btn-info">{{ __('View') }}</a>
+                                        <a href="{{ route('rentals.details', ['rental' => $rental->uuid]) }}"
+                                            class="btn btn-sm btn-info">{{ __('View Details') }}</a>
                                     @endif
                                 </td>
                             </tr>
