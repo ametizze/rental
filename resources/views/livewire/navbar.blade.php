@@ -27,9 +27,23 @@
                             <a class="nav-link" href="{{ route('invoices') }}">{{ __('Invoices') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link"
-                                href="{{ route('reports.customer-balance') }}">{{ __('Customer Balance') }}</a>
+                            <a class="nav-link" href="{{ route('transactions') }}">{{ __('Transactions') }}</a>
                         </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                {{ __('Reports') }}
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="reportsDropdown">
+                                <li>
+                                    <a class="dropdown-item"
+                                        href="{{ route('reports.customer-balance') }}">{{ __('Customer Balance') }}</a>
+                                </li>
+                                {{-- Aqui entrariam outros relatórios, como o de Lucratividade --}}
+                            </ul>
+                        </li>
+
                         @if (auth()->user()->role === 'superadmin')
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('tenants') }}">{{ __('Tenants') }}</a>
@@ -41,43 +55,6 @@
                     @else
                         <li class="nav-item">
                             <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
-                        </li>
-                    @endauth
-                </ul>
-
-                <ul class="navbar-nav d-flex">
-                    <li class="nav-item dropdown me-2">
-                        <a class="nav-link dropdown-toggle" href="#" id="langDropdown" role="button"
-                            data-bs-toggle="dropdown" aria-expanded="false">
-                            {{ strtoupper(app()->getLocale()) }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="langDropdown">
-                            <li><a class="dropdown-item"
-                                    href="{{ route('locale.switch', ['locale' => 'en']) }}">English</a></li>
-                            <li><a class="dropdown-item"
-                                    href="{{ route('locale.switch', ['locale' => 'pt_BR']) }}">Português</a></li>
-                            <li><a class="dropdown-item"
-                                    href="{{ route('locale.switch', ['locale' => 'es']) }}">Español</a></li>
-                        </ul>
-                    </li>
-
-                    @auth
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                                @if (auth()->user()->tenant)
-                                    {{ auth()->user()->tenant->name }} -
-                                @endif
-                                {{ auth()->user()->name }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="#">{{ __('Profile') }}</a></li>
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
-                                <li><a class="dropdown-item" href="#"
-                                        wire:click.prevent="logout">{{ __('Logout') }}</a></li>
-                            </ul>
                         </li>
                     @endauth
                 </ul>
