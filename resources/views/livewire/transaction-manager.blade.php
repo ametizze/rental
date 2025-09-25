@@ -14,7 +14,7 @@
                     <div class="row g-3">
                         <div class="col-md-4">
                             <label class="form-label">{{ __('Type') }}</label>
-                            <select class="form-control" wire:model.defer="type">
+                            <select class="form-control" wire:model.live="type">
                                 <option value="expense">{{ __('Expense') }}</option>
                                 <option value="income">{{ __('Income') }}</option>
                             </select>
@@ -36,6 +36,47 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">{{ __('Category') }}</label>
+                            <div class="input-group">
+                                <select class="form-control" wire:model.defer="categoryId">
+                                    <option value="">{{ __('Select Category') }}</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="btn btn-info"
+                                    wire:click="$dispatch('open-category-modal')">
+                                    +
+                                </button>
+                            </div>
+                            @error('categoryId')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">{{ __('Customer') }}</label>
+                            <select class="form-control" wire:model.defer="customerId">
+                                <option value="">{{ __('Select Customer (Optional)') }}</option>
+                                @foreach ($customers as $customer)
+                                    <option value="{{ $customer->id }}">{{ $customer->name }}</option>
+                                @endforeach
+                            </select>
+                            @error('customerId')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-4" @if ($type !== 'income') style="display: none;" @endif>
+                            <label class="form-label">{{ __('Due Date') }}</label>
+                            <input type="date" class="form-control" wire:model.defer="dueDate">
+                            @error('dueDate')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+
                         <div class="col-12">
                             <label class="form-label">{{ __('Description') }}</label>
                             <input type="text" class="form-control" wire:model.defer="description">
@@ -61,8 +102,11 @@
                         <tr>
                             <th>{{ __('Type') }}</th>
                             <th>{{ __('Amount') }}</th>
-                            <th>{{ __('Description') }}</th>
+                            <th>{{ __('Category') }}</th>
+                            <th>{{ __('Customer') }}</th>
                             <th>{{ __('Date') }}</th>
+                            <th>{{ __('Due Date') }}</th>
+                            <th>{{ __('Status') }}</th>
                             <th>{{ __('Actions') }}</th>
                         </tr>
                     </thead>
@@ -75,8 +119,23 @@
                                     </span>
                                 </td>
                                 <td>${{ number_format($transaction->amount, 2) }}</td>
-                                <td>{{ $transaction->description }}</td>
-                                <td>{{ $transaction->date }}</td>
+                                <td>{{ $transaction->category->name ?? 'N/A' }}</td>
+                                <td>{{ $transaction->customer->name ?? 'N/A' }}</td>
+                                <td>{{ $transaction->date->format('Y-m-d') }}</td>
+                                <td>{{ $transaction->due_date ? $transaction->due_date->format('Y-m-d') : 'N/A' }}</td>
+                                <td>
+                                    @php
+                                        $status = $transaction->calculated_status;
+                                        $color = match ($status) {
+                                            'received' => 'success',
+                                            'overdue' => 'danger',
+                                            default => 'secondary',
+                                        };
+                                    @endphp
+                                    <span class="badge bg-{{ $color }}">
+                                        {{ __(ucfirst($status)) }}
+                                    </span>
+                                </td>
                                 <td>
                                     <button wire:click="edit({{ $transaction->id }})"
                                         class="btn btn-sm btn-warning">{{ __('Edit') }}</button>
@@ -90,5 +149,7 @@
                 {{ $transactions->links() }}
             </div>
         </div>
+
+        @livewire('category-modal')
     </div>
 </div>

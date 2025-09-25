@@ -19,6 +19,9 @@ class EquipmentManager extends Component
     public $qrCode;
     public $existingPhoto;
 
+    public $initialCost;
+    public $purchaseDate;
+
     /**
      * Photo validation: allow up to 32MB (32768 KB).
      * Note: Laravel's "max" for files is in kilobytes.
@@ -34,6 +37,8 @@ class EquipmentManager extends Component
             'daily_rate' => 'required|numeric|min:0',
             'photo'      => 'nullable|image|mimes:png,jpg,jpeg,heic|max:16384', // Max 16mb
             'status'     => 'required|string',
+            'initialCost' => 'required|numeric|min:0', // Novo
+            'purchaseDate' => 'required|date',        // Novo
         ];
     }
 
@@ -42,63 +47,64 @@ class EquipmentManager extends Component
         $this->validate();
 
         $data = [
-            'name'       => $this->name,
-            'category'   => $this->category,
-            'serial'     => $this->serial,
+            'name' => $this->name,
+            'category' => $this->category,
+            'serial' => $this->serial,
             'daily_rate' => $this->daily_rate,
-            'status'     => $this->status,
+            'initial_cost' => $this->initialCost, // Salva o custo inicial
+            'purchase_date' => $this->purchaseDate, // Salva a data de compra
+            'status' => $this->status,
         ];
 
         if (!$this->equipmentId) {
-            $data['qr_uuid']  = (string) Str::uuid();
+            $data['qr_uuid'] = (string) Str::uuid();
             $data['tenant_id'] = auth()->user()->tenant_id;
         }
 
         if ($this->photo) {
-            // Read and resize the image server-side using Intervention
             $manager = new ImageManager(new Driver());
             $image = $manager->read($this->photo->getRealPath());
-
-            // Resize based on width, constrain aspect ratio (auto height)
-            // $image->resize(1024, null, function ($constraint) {
-            //     $constraint->aspectRatio();
-            //     $constraint->upsize();
-            // });
-
-            // Resize based on width only, auto height
-            // $image->resize(width: 1024);
-
-            // Scale down to a width of 1024, if necessary, maintaining aspect ratio
             $image->scaleDown(width: 1024);
-
             $filename = Str::random(40) . '.' . $this->photo->getClientOriginalExtension();
             $path = 'equipment_photos/' . $filename;
             $image->save(storage_path('app/public/' . $path));
-
             $data['photo'] = $path;
         }
 
         Equipment::updateOrCreate(['id' => $this->equipmentId], $data);
-
-        session()->flash('success', $this->equipmentId ? __('Equipment updated successfully!') : __('Equipment created successfully!'));
+        session()->flash('success', $this->equipmentId ? 'Equipamento atualizado com sucesso!' : 'Equipamento criado com sucesso!');
         $this->resetForm();
     }
 
     public function edit(Equipment $equipment)
     {
-        $this->equipmentId  = $equipment->id;
-        $this->name         = $equipment->name;
-        $this->category     = $equipment->category;
-        $this->serial       = $equipment->serial;
-        $this->daily_rate   = $equipment->daily_rate;
-        $this->status       = $equipment->status;
+        $this->equipmentId = $equipment->id;
+        $this->name = $equipment->name;
+        $this->category = $equipment->category;
+        $this->serial = $equipment->serial;
+        $this->daily_rate = $equipment->daily_rate;
+        $this->status = $equipment->status;
         $this->existingPhoto = $equipment->photo;
+
+        // Carrega os novos campos
+        $this->initialCost = $equipment->initial_cost;
+        $this->purchaseDate = $equipment->purchase_date ? $equipment->purchase_date->format('Y-m-d') : null;
     }
 
     public function resetForm()
     {
-        // Reset file input too
-        $this->reset(['name', 'category', 'serial', 'daily_rate', 'photo', 'status', 'equipmentId', 'existingPhoto']);
+        $this->reset([
+            'name',
+            'category',
+            'serial',
+            'daily_rate',
+            'photo',
+            'status',
+            'equipmentId',
+            'existingPhoto',
+            'initialCost',
+            'purchaseDate'
+        ]);
     }
 
     public function delete($id)

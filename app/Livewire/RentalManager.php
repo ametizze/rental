@@ -9,6 +9,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
 use Carbon\Carbon;
+use Illuminate\Container\Attributes\Log;
 use Illuminate\Support\Facades\DB;
 
 class RentalManager extends Component
@@ -27,7 +28,7 @@ class RentalManager extends Component
         'start_date' => 'required|date',
         'end_date' => 'required|date|after_or_equal:start_date',
         'selected_equipment' => 'required|array|min:1',
-        'start_photos.*' => 'nullable|image|max:4096', // Fotos de até 4MB
+        'start_photos.*' => 'nullable|image|max:16384', // Fotos de até 16MB
     ];
 
     protected $messages = [
@@ -103,6 +104,7 @@ class RentalManager extends Component
             $this->resetForm();
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Error creating rental: ' . $e->getMessage());
             session()->flash('error', __('An error occurred. Please try again.'));
         }
     }

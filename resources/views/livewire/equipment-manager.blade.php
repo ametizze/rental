@@ -26,6 +26,29 @@
                         </div>
 
                         <div class="col-md-6">
+                            <label class="form-label">{{ __('Category') }}</label>
+                            <select class="form-control" wire:model.defer="category">
+                                <option value="">{{ __('Select Category') }}</option>
+                                <option value="Vehicle">{{ __('Vehicle') }}</option>
+                                <option value="Flooring">{{ __('Flooring') }}</option>
+                                <option value="Power Tool">{{ __('Power Tool') }}</option>
+                                <option value="Hand Tool">{{ __('Hand Tool') }}</option>
+                                <option value="Heavy Equipment">{{ __('Heavy Equipment') }}</option>
+                            </select>
+                            @error('category')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">{{ __('Initial Cost') }} ($)</label>
+                            <input type="number" step="0.01" class="form-control" wire:model.defer="initialCost">
+                            @error('initialCost')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-6">
                             <label class="form-label">{{ __('Daily Rate') }}</label>
                             <input type="text" class="form-control" wire:model.defer="daily_rate">
                             @error('daily_rate')
@@ -34,9 +57,9 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">{{ __('Category') }}</label>
-                            <input type="text" class="form-control" wire:model.defer="category">
-                            @error('category')
+                            <label class="form-label">{{ __('Purchase Date') }}</label>
+                            <input type="date" class="form-control" wire:model.defer="purchaseDate">
+                            @error('purchaseDate')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
@@ -56,11 +79,9 @@
                         <div class="col-md-6">
                             <label class="form-label">{{ __('Photo') }}</label>
 
-                            {{-- Hint: "accept" + "capture" help mobile browsers offer camera/gallery --}}
                             <input type="file" class="form-control" wire:model="photo" accept="image/*"
                                 capture="environment">
 
-                            {{-- Upload state and validation errors --}}
                             <div wire:loading wire:target="photo" class="mt-2 text-muted">
                                 {{ __('Uploading photo...') }}
                             </div>
@@ -68,7 +89,6 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
 
-                            {{-- Preview: temporary (new upload) or existing --}}
                             @if ($photo)
                                 <img src="{{ $photo->temporaryUrl() }}" class="img-fluid mt-2"
                                     style="max-height: 150px;">
@@ -77,7 +97,6 @@
                                     style="max-height: 150px;">
                             @endif
 
-                            {{-- Optional UX tip for users on mobile --}}
                             <div class="form-text">
                                 {{ __('Tip: On mobile, you can take a photo or choose from the gallery.') }}
                             </div>

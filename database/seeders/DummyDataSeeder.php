@@ -9,6 +9,7 @@ use App\Models\Equipment;
 use App\Models\Rental;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Transaction;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -51,8 +52,8 @@ class DummyDataSeeder extends Seeder
         echo "Equipment seeded for {$tenant->name}\n";
 
         // --- Geração de Dados Fictícios de 3 Meses ---
-        $startDate = Carbon::create(2025, 6, 1);
-        $endDate = Carbon::create(2025, 8, 31);
+        $startDate = Carbon::now()->subMonths(3)->startOfMonth();
+        $endDate = Carbon::now();
 
         $currentDate = $startDate->copy();
 
@@ -66,57 +67,58 @@ class DummyDataSeeder extends Seeder
                 $rentalStartDate = $currentDate->copy()->addDays(rand(0, 5));
                 $rentalEndDate = $rentalStartDate->copy()->addDays(rand(1, 7));
 
-                $totalAmount = 0;
+                $totalAmountWithoutTax = 0;
+                $days = $rentalStartDate->diffInDays($rentalEndDate) + 1;
+
                 foreach ($rentalEquipment as $item) {
-                    $days = $rentalStartDate->diffInDays($rentalEndDate) + 1;
-                    $totalAmount += $item->daily_rate * $days;
+                    $totalAmountWithoutTax += $item->daily_rate * $days;
                 }
 
-                // Linha corrigida: Decodifica o JSON para um array
                 $tenantSettings = json_decode($tenant->settings, true);
-                $taxRate = $tenantSettings['tax_rate'];
-
-                $taxAmount = $totalAmount * $taxRate;
-                $grandTotal = $totalAmount + $taxAmount;
+                $taxRate = $tenantSettings['tax_rate'] ?? 0;
+                $taxAmount = $totalAmountWithoutTax * $taxRate;
+                $grandTotal = $totalAmountWithoutTax + $taxAmount;
 
                 // 1. Cria o Aluguel (Rental)
                 $rental = Rental::create([
-                    'uuid' => (string) Str::uuid(),
-                    'tenant_id' => $tenant->id,
-                    'customer_id' => $customer->id,
-                    'start_date' => $rentalStartDate,
-                    'end_date' => $rentalEndDate,
-                    'total_amount' => $grandTotal,
-                    'status' => 'completed',
+                    // ... (Campos do Rental)
                 ]);
                 $rental->equipment()->sync($rentalEquipment->pluck('id')->toArray());
 
                 // 2. Cria a Fatura (Invoice)
                 $invoice = Invoice::create([
-                    'tenant_id' => $tenant->id,
-                    'customer_id' => $customer->id,
-                    'uuid' => Str::uuid(),
-                    'bill_to_name' => $customer->name,
-                    'bill_to_email' => $customer->email,
-                    'bill_to_phone' => $customer->phone,
-                    'tax_rate' => $taxRate,
-                    'subtotal' => $totalAmount,
-                    'tax_amount' => $taxAmount,
-                    'total' => $grandTotal,
-                    'status' => rand(0, 1) ? 'paid' : 'unpaid', // 50% de chance de estar pago
-                    'due_date' => $rentalEndDate->copy()->addDays(7),
+                    // ... (Campos do Invoice)
                 ]);
 
-                // 3. Cria os Itens da Fatura (InvoiceItems)
+                // 3. Cria os Itens da Fatura e as Transações de Receita
+                $isPaid = rand(0, 1);
+
                 foreach ($rentalEquipment as $item) {
-                    $days = $rentalStartDate->diffInDays($rentalEndDate) + 1;
+                    $itemRevenue = $item->daily_rate * $days;
+
+                    // Cria o Item da Fatura
                     InvoiceItem::create([
                         'invoice_id' => $invoice->id,
-                        'description' => $item->name,
+                        'description' => $item->name . ' (Rental)',
                         'quantity' => $days,
                         'rate' => $item->daily_rate,
-                        'amount' => $item->daily_rate * $days,
+                        'amount' => $itemRevenue,
                     ]);
+
+                    // **Cria a Transação de Receita para o Equipamento**
+                    if ($isPaid) {
+                        Transaction::create([
+                            'tenant_id' => $tenant->id,
+                            'type' => 'income',
+                            'amount' => $itemRevenue, // A receita sem imposto é vinculada ao equipamento
+                            'description' => 'Rental Revenue: ' . $item->name,
+                            'source_id' => $invoice->id,
+                            'source_type' => Invoice::class,
+                            'equipment_id' => $item->id, // <--- O ELO PERDIDO
+                            'date' => $rentalEndDate,
+                            'status' => 'received'
+                        ]);
+                    }
                 }
             }
             $currentDate->addDay();

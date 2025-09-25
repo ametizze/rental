@@ -5,12 +5,15 @@ use App\Livewire\CustomerManager;
 use App\Livewire\EquipmentManager;
 use App\Livewire\InvoiceManager;
 use App\Livewire\Login;
+use App\Livewire\MaintenanceLogManager;
 use App\Livewire\RentalManager;
 use App\Livewire\ShowInvoice;
 use App\Livewire\ShowRental;
+use App\Livewire\StockProfitabilityReport;
 use App\Livewire\TenantManager;
 use App\Livewire\TransactionManager;
 use App\Livewire\UserManager;
+use App\Livewire\UserProfile;
 use App\Models\Equipment;
 use App\Models\Invoice;
 use Illuminate\Support\Facades\Auth;
@@ -57,10 +60,17 @@ Route::middleware(['auth'])->group(function () {
 
     // Módulo de Aluguéis
     Route::get('/rentals', RentalManager::class)->name('rentals');
-    Route::get('/rentals/{rental:uuid}/details', ShowRental::class)->name('rentals.details'); // Removida middleware('auth') redundante
+    Route::get('/rentals/{rental:uuid}/details', ShowRental::class)->name('rentals.details');
 
     // Módulos de Relatórios
-    Route::get('/reports/customer-balance', CustomerBalance::class)->name('reports.customer-balance'); // Removida middleware('auth') redundante
+    Route::get('/reports/customer-balance', CustomerBalance::class)->name('reports.customer-balance');
+    Route::get('/profitability', StockProfitabilityReport::class)->name('profitability');
+
+    // Módulo de Logs de Manutenção
+    Route::get('/maintenance', MaintenanceLogManager::class)->name('maintenance');
+
+    // Perfil do Usuário
+    Route::get('/profile', UserProfile::class)->name('profile');
 
     // Rotas de Superadmin (Permissão: manage-tenants)
     Route::middleware('can:manage-tenants')->group(function () {

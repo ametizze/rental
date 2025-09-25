@@ -22,7 +22,8 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
-        'tenant_id'
+        'tenant_id',
+        'preferred_lang', // New attribute for user's preferred language
     ];
 
     /**

@@ -9,10 +9,10 @@ class ShowRental extends Component
 {
     public $rental;
 
-    public function mount(string $uuid)
+    public function mount(string $rental)
     {
         $this->rental = Rental::with(['customer', 'equipment'])
-            ->where('uuid', $uuid)
+            ->where('uuid', $rental)
             ->firstOrFail();
     }
 

@@ -15,9 +15,27 @@ class SetLocale
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->hasSession() && $request->session()->has('locale')) {
-            app()->setLocale($request->session()->get('locale'));
+        $locale = $request->session()->get('locale');
+
+        // PRIORITY 1: Check Session (set via language selector)
+        if ($request->hasSession() && $locale) {
+            app()->setLocale($locale);
+            return $next($request);
         }
+
+        // PRIORITY 2: Check Database (if user is authenticated)
+        if (auth()->check()) {
+            $userLang = auth()->user()->preferred_lang;
+
+            if ($userLang) {
+                app()->setLocale($userLang);
+                return $next($request);
+            }
+        }
+
+        // PRIORITY 3: Fallback to Application Default (config/app.php)
+        // O Laravel já faz isso, mas podemos ser explícitos:
+        app()->setLocale(config('app.locale'));
 
         return $next($request);
     }
