@@ -58,9 +58,11 @@ class EquipmentManager extends Component
             // Read and resize the image server-side using Intervention
             $manager = new ImageManager(new Driver());
             $image = $manager->read($this->photo->getRealPath());
-            $image->resize(
-                width: 1024
-            );
+            // Resize based on width, constrain aspect ratio (auto height)
+            $image->resize(800, null, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            });
 
             $filename = Str::random(40) . '.' . $this->photo->getClientOriginalExtension();
             $path = 'equipment_photos/' . $filename;
