@@ -32,12 +32,17 @@ class ShowInvoice extends Component
 
     public function addPayment()
     {
-        $this->validate();
+        $this->validate([
+            'newPaymentAmount' => 'required|numeric|min:0.01',
+            'newPaymentDate' => 'required|date',
+            'newPaymentNotes' => 'nullable|string|max:255',
+        ]);
 
+        // Calcula o Saldo Devedor
         $balanceDue = $this->invoice->total - $this->invoice->paid_amount;
 
-        // 1. Validação de Regra de Negócio: Não aceitar pagamento maior que o saldo
-        if ($this->newPaymentAmount > $balanceDue) {
+        // 1. Validação Crítica: Não aceitar pagamento maior que o saldo
+        if (round($this->newPaymentAmount, 2) > round($balanceDue, 2)) {
             session()->flash('error', __('The payment amount exceeds the balance due.'));
             return;
         }
@@ -51,10 +56,11 @@ class ShowInvoice extends Component
             'notes' => $this->newPaymentNotes,
         ]);
 
-        // 3. Atualiza a fatura
+        // 3. Atualiza a fatura: Incrementa o valor pago
         $this->invoice->paid_amount += $this->newPaymentAmount;
 
-        if ($this->invoice->paid_amount >= $this->invoice->total) {
+        // 4. Define o Status Final
+        if (round($this->invoice->paid_amount, 2) >= round($this->invoice->total, 2)) {
             $this->invoice->status = 'paid';
         } else {
             $this->invoice->status = 'partially_paid';
@@ -62,7 +68,7 @@ class ShowInvoice extends Component
 
         $this->invoice->save();
 
-        // 4. Recarrega o componente para refletir o novo saldo e histórico
+        // 5. Recarrega o componente (a si próprio) para atualizar as tabelas e o saldo
         $this->invoice->refresh();
 
         session()->flash('success', __('Payment added successfully.'));

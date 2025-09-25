@@ -158,7 +158,9 @@
                                     <button wire:click="edit({{ $item->id }})" class="btn btn-sm btn-warning">
                                         {{ __('Edit') }}
                                     </button>
-                                    <button wire:click="delete({{ $item->id }})" class="btn btn-sm btn-danger">
+                                    <button wire:click="delete({{ $item->id }})"
+                                        wire:confirm="{{ __('Are you sure you want to delete this item?') }}"
+                                        class="btn btn-sm btn-danger">
                                         {{ __('Delete') }}
                                     </button>
                                 </td>

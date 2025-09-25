@@ -181,5 +181,20 @@
     "Total Revenue": "Receita Total",
     "Net Profit / Loss": "Lucro / Prejuízo Líquido",
     "ROI (%)": "ROI (%)",
-    "Profitability Report": "Relatório de Lucratividade"
+    "Profitability Report": "Relatório de Lucratividade",
+    "Are you sure you want to delete this item?": "Tem certeza de que deseja excluir este item?",
+    "Condition Photos (Start of Rental)": "Fotos do Estado (Início do Aluguel)",
+    "Description/Label": "Descrição/Rótulo",
+    "Add Photo": "Adicionar Foto",
+    "Remove Photo": "Remover Foto",
+    "Upload Photo": "Carregar Foto",
+    "max_photo_size": "O tamanho máximo da foto é :size MB.",
+    "Please take or select an image for this photo field.": "Por favor, tire ou selecione uma imagem para este campo de foto.",
+    "An error occurred. Please try again.": "Ocorreu um erro. Por favor, tente novamente.",
+    "The file selected must be a valid image format.": "O arquivo selecionado deve ser um formato de imagem válido.",
+    "View Details": "Ver Detalhes",
+    "Monthly Overview": "Visão Geral Mensal",
+    "Accounts Receivable": "Contas a Receber",
+    "Accounts Payable": "Contas a Pagar",
+    "Total Customers": "Total de Clientes"
 }

@@ -26,6 +26,33 @@
                 </div>
             </div>
             <div class="col-md-3">
+                <div class="card text-white bg-danger mb-3">
+                    <div class="card-header">{{ __('Active Rentals') }}</div>
+                    <div class="card-body">
+                        <h2 class="card-title">{{ $activeRentals }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mt-1">
+            <div class="col-md-3">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-header">{{ __('Accounts Receivable') }}</div>
+                    <div class="card-body">
+                        <h2 class="card-title">${{ number_format($balanceReceivable, 2) }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-secondary mb-3">
+                    <div class="card-header">{{ __('Accounts Payable') }}</div>
+                    <div class="card-body">
+                        <h2 class="card-title">${{ number_format($balancePayable, 2) }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
                 <div class="card text-white bg-dark mb-3">
                     <div class="card-header">{{ __('Top 5 Equipment') }}</div>
                     <div class="card-body">
@@ -45,10 +72,10 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-header bg-dark text-white">
-                        {{ __('Monthly Overview') }}
+                        {{ __('Income vs Expenses (Last 6 Months)') }}
                     </div>
                     <div class="card-body">
-                        <canvas id="monthlyOverviewChart" style="max-height: 400px;"></canvas>
+                        <canvas id="monthlyOverviewChart"></canvas>
                     </div>
                 </div>
             </div>
@@ -60,44 +87,33 @@
             document.addEventListener('livewire:initialized', () => {
                 const ctx = document.getElementById('monthlyOverviewChart').getContext('2d');
                 const chart = new Chart(ctx, {
-                    type: 'pie',
+                    type: 'bar', // Tipo Bar (o correto para dados históricos)
                     data: {
-                        labels: ['{{ __('Income') }}', '{{ __('Expenses') }}'],
+                        labels: @js($chartLabels),
                         datasets: [{
-                            data: [
-                                {{ $monthlyRevenue }},
-                                {{-- Aqui você precisaria de uma variável $monthlyExpenses no componente --}}
-                                0
-                            ],
-                            backgroundColor: [
-                                'rgba(75, 192, 192, 0.8)',
-                                'rgba(255, 99, 132, 0.8)'
-                            ],
-                            borderColor: [
-                                'rgba(75, 192, 192, 1)',
-                                'rgba(255, 99, 132, 1)'
-                            ],
-                            borderWidth: 1
-                        }]
+                                label: '{{ __('Income') }}',
+                                data: @js($chartIncome),
+                                backgroundColor: 'rgba(75, 192, 192, 0.8)',
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '{{ __('Expenses') }}',
+                                data: @js($chartExpenses),
+                                backgroundColor: 'rgba(255, 99, 132, 0.8)',
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                borderWidth: 1
+                            }
+                        ]
                     },
                     options: {
                         responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'top',
+                        scales: {
+                            x: {
+                                stacked: false, // Pode ser true para barras empilhadas, mas deixamos false para comparação
                             },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.label || '';
-                                        if (label) {
-                                            label += ': ';
-                                        }
-                                        label += context.formattedValue + ' (' + context.dataset.data[
-                                            context.dataIndex] + ')';
-                                        return label;
-                                    }
-                                }
+                            y: {
+                                beginAtZero: true
                             }
                         }
                     }

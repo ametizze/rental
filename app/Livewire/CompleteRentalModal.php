@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Str;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class CompleteRentalModal extends Component
 {
@@ -16,13 +18,35 @@ class CompleteRentalModal extends Component
 
     public $show = false;
     public ?Rental $rental = null;
-    public $end_photos = [];
+    public $endPhotos = [];
 
     protected $listeners = ['openCompleteRentalModal'];
 
-    protected $rules = [
-        'end_photos.*' => 'nullable|image|max:2048',
-    ];
+    protected function rules()
+    {
+        return [
+            'endPhotos.*.photo' => 'required|image|max:16384',
+            'endPhotos.*.label' => 'nullable|string|max:100',
+        ];
+    }
+
+    public function mount()
+    {
+        $this->addPhotoField();
+    }
+
+    public function addPhotoField()
+    {
+        $this->endPhotos[] = ['photo' => null, 'label' => null];
+    }
+
+    public function removePhotoField($index)
+    {
+        if (isset($this->endPhotos[$index])) {
+            unset($this->endPhotos[$index]);
+            $this->endPhotos = array_values($this->endPhotos);
+        }
+    }
 
     public function openCompleteRentalModal(int $rentalId)
     {
@@ -32,7 +56,12 @@ class CompleteRentalModal extends Component
 
     public function completeRental()
     {
-        $this->validate();
+        // 1. Validação com geração de nomes amigáveis
+        $this->validate(
+            $this->rules(),
+            [], // Mensagens globais
+            $this->getValidationAttributes() // Nomes amigáveis
+        );
 
         DB::beginTransaction();
 
@@ -45,14 +74,28 @@ class CompleteRentalModal extends Component
 
             // 1. Lida com as fotos de devolução
             $photoPaths = [];
-            foreach ($this->end_photos as $photo) {
-                $photoPaths[] = $photo->store('rental_photos/end', 'public');
+            foreach ($this->endPhotos as $photoBlock) {
+                if (isset($photoBlock['photo'])) {
+                    $manager = new ImageManager(new Driver());
+                    $image = $manager->read($photoBlock['photo']->getRealPath());
+                    $image->scaleDown(width: 1024); // Comprime a imagem
+
+                    $filename = Str::random(40) . '.' . $photoBlock['photo']->getClientOriginalExtension();
+                    $path = 'rental_photos/end/' . $filename;
+                    $image->save(storage_path('app/public/' . $path));
+
+                    $photoPaths[] = [
+                        'path' => $path,
+                        'label' => $photoBlock['label'],
+                        'timestamp' => now()->toDateTimeString(),
+                    ];
+                }
             }
 
             // 2. Atualiza o status do aluguel e as fotos
             $this->rental->update([
                 'status' => 'completed',
-                'end_photos' => $photoPaths,
+                'end_photos' => $photoPaths, // Salva o array JSON de caminhos + rótulos
             ]);
 
             // 3. Atualiza o status dos equipamentos
@@ -97,15 +140,27 @@ class CompleteRentalModal extends Component
             $this->close();
             $this->dispatch('refreshRentals');
         } catch (\Exception $e) {
+            \Log::error('Error completing rental: ' . $e->getMessage());
             DB::rollBack();
             session()->flash('error', __('An error occurred while finalizing the rental and creating the invoice.'));
         }
     }
 
+    public function getValidationAttributes()
+    {
+        $attributes = [];
+        foreach ($this->endPhotos as $index => $photoBlock) {
+            $number = $index + 1;
+            $attributes["endPhotos.{$index}.photo"] = __('Return Photo') . ' ' . $number;
+            $attributes["endPhotos.{$index}.label"] = __('Return Label') . ' ' . $number;
+        }
+        return $attributes;
+    }
+
     public function close()
     {
         $this->show = false;
-        $this->end_photos = [];
+        $this->endPhotos = [];
         $this->rental = null;
     }
 

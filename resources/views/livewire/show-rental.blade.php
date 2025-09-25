@@ -46,9 +46,12 @@
                         <p class="fw-bold">{{ __('Start of Rental') }}</p>
                         @if (!empty($this->rental->start_photos))
                             <div class="d-flex flex-wrap">
-                                @foreach ($this->rental->start_photos as $photo)
-                                    <img src="{{ asset('storage/' . $photo) }}" class="img-thumbnail me-2 mb-2"
-                                        style="max-height: 150px;">
+                                @foreach ($this->rental->start_photos as $photoBlock)
+                                    <div class="me-2 mb-2 text-center" style="max-width: 150px;">
+                                        <img src="{{ asset('storage/' . $photoBlock['path']) }}" class="img-thumbnail"
+                                            style="max-height: 150px;">
+                                        <p class="text-muted small mt-1 mb-0">{{ $photoBlock['label'] ?? '' }}</p>
+                                    </div>
                                 @endforeach
                             </div>
                         @else
@@ -59,9 +62,12 @@
                         <p class="fw-bold">{{ __('End of Rental') }}</p>
                         @if (!empty($this->rental->end_photos))
                             <div class="d-flex flex-wrap">
-                                @foreach ($this->rental->end_photos as $photo)
-                                    <img src="{{ asset('storage/' . $photo) }}" class="img-thumbnail me-2 mb-2"
-                                        style="max-height: 150px;">
+                                @foreach ($this->rental->end_photos as $photoBlock)
+                                    <div class="me-2 mb-2 text-center" style="max-width: 150px;">
+                                        <img src="{{ asset('storage/' . $photoBlock['path']) }}" class="img-thumbnail"
+                                            style="max-height: 150px;">
+                                        <p class="text-muted small mt-1 mb-0">{{ $photoBlock['label'] ?? '' }}</p>
+                                    </div>
                                 @endforeach
                             </div>
                         @else

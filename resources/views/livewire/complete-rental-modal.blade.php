@@ -9,41 +9,54 @@
             </div>
             <div class="modal-body">
                 @if ($rental)
-                    <p><strong>{{ __('Customer') }}:</strong> {{ $rental->customer->name }}</p>
-                    <p><strong>{{ __('Start Date') }}:</strong> {{ $rental->start_date->format('d/m/Y') }}</p>
-                    <p><strong>{{ __('End Date') }}:</strong> {{ $rental->end_date->format('d/m/Y') }}</p>
-
-                    <h5 class="mt-4">{{ __('Equipment') }}:</h5>
-                    <ul>
-                        @foreach ($rental->equipment as $item)
-                            <li>{{ $item->name }} ({{ $item->serial }}) - ${{ number_format($item->daily_rate, 2) }}
-                                / {{ __('day') }}</li>
-                        @endforeach
-                    </ul>
-
-                    <h5 class="mt-4">{{ __('Initial Photos') }}</h5>
-                    @if (!empty($rental->start_photos))
-                        <div class="d-flex flex-wrap">
-                            @foreach ($rental->start_photos as $photo)
-                                <img src="{{ asset('storage/' . $photo) }}"
-                                    style="max-height: 150px; margin-right: 10px; border-radius: 5px;">
-                            @endforeach
-                        </div>
-                    @else
-                        <p>{{ __('No photos were taken at the start of the rental.') }}</p>
-                    @endif
-
                     <hr>
 
                     <form wire:submit.prevent="completeRental">
-                        <div class="mb-3">
-                            <label for="endPhotos" class="form-label">{{ __('Return Photos') }}</label>
-                            <input type="file" class="form-control" wire:model="end_photos" multiple>
-                            @error('end_photos.*')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
-                        </div>
+                        <h5 class="mb-3">{{ __('Confirm Return and Document Condition') }}</h5>
 
+                        <div class="mb-3">
+                            @foreach ($endPhotos as $index => $photoBlock)
+                                <div class="card p-3 mb-3 border" wire:key="end-photo-{{ $index }}">
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-12 text-end">
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                wire:click="removePhotoField({{ $index }})">
+                                                {{ __('Remove') }}
+                                            </button>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ __('Photo') }} {{ $index + 1 }}</label>
+                                            <input type="file" class="form-control"
+                                                wire:model="endPhotos.{{ $index }}.photo" accept="image/*"
+                                                capture="environment">
+                                            @error('endPhotos.' . $index . '.photo')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+
+                                            @if (isset($photoBlock['photo']))
+                                                <img src="{{ $photoBlock['photo']->temporaryUrl() }}"
+                                                    class="img-fluid mt-2" style="max-height: 100px;">
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ __('Description/Label') }}</label>
+                                            <input type="text" class="form-control"
+                                                wire:model.defer="endPhotos.{{ $index }}.label"
+                                                placeholder="{{ __('e.g., Return with scratch on handle') }}">
+                                            @error('endPhotos.' . $index . '.label')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+
+                            <button type="button" class="btn btn-secondary" wire:click="addPhotoField">
+                                + {{ __('Add Photo') }}
+                            </button>
+                        </div>
                         <div class="d-grid mt-4">
                             <button type="submit" class="btn btn-success">{{ __('Confirm Return') }}</button>
                         </div>

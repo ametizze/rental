@@ -11,6 +11,9 @@ use Livewire\WithFileUploads;
 use Carbon\Carbon;
 use Illuminate\Container\Attributes\Log;
 use Illuminate\Support\Facades\DB;
+use Intervention\Image\ImageManager;
+use Illuminate\Support\Str;
+use Intervention\Image\Drivers\Gd\Driver;
 
 class RentalManager extends Component
 {
@@ -21,19 +24,29 @@ class RentalManager extends Component
     public $selected_equipment = [];
     public $rental_equipment = [];
     public $total_amount = 0;
-    public $start_photos = [];
+    public $startPhotos = [];
 
-    protected $rules = [
-        'customer_id' => 'required|exists:customers,id',
-        'start_date' => 'required|date',
-        'end_date' => 'required|date|after_or_equal:start_date',
-        'selected_equipment' => 'required|array|min:1',
-        'start_photos.*' => 'nullable|image|max:16384', // Fotos de até 16MB
-    ];
+    public function rules()
+    {
+        return [
+            'customer_id' => 'required|exists:customers,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'selected_equipment' => 'required|array|min:1',
+            'startPhotos.*.photo' => 'required|image|max:16384',
+            'startPhotos.*.label' => 'nullable|string|max:100',
+        ];
+    }
 
-    protected $messages = [
-        'selected_equipment.min' => 'É necessário selecionar pelo menos um equipamento.',
-    ];
+    public function messages(): array
+    {
+        return [
+            'selected_equipment.min' => __('Select at least one equipment.'),
+            'startPhotos.*.photo.required' => __('Please take or select an image for this photo field.'),
+            'startPhotos.*.photo.image' => __('The file selected must be a valid image format.'),
+            'startPhotos.*.photo.max' => __('max_photo_size', ['size' => '16MB']),
+        ];
+    }
 
     protected $listeners = ['refreshRentals' => '$refresh'];
 
@@ -74,13 +87,57 @@ class RentalManager extends Component
         $this->calculateTotalAmount();
     }
 
+    public function mount()
+    {
+        $this->addPhotoField();
+    }
+
+    public function addPhotoField()
+    {
+        $this->startPhotos[] = ['photo' => null, 'label' => null];
+    }
+
+    public function removePhotoField($index)
+    {
+        if (isset($this->startPhotos[$index])) {
+            $this->resetErrorBag('startPhotos.' . $index . '.photo');
+            unset($this->startPhotos[$index]);
+            $this->startPhotos = array_values($this->startPhotos);
+        }
+    }
+
     public function save()
     {
         $this->validate();
 
         $photoPaths = [];
-        foreach ($this->start_photos as $photo) {
-            $photoPaths[] = $photo->store('rental_photos/start', 'public');
+        // 1. Lógica de compressão para cada foto
+        foreach ($this->startPhotos as $key => $photoBlock) {
+            if (isset($photoBlock['photo'])) {
+                // Cria um gerenciador de imagem
+                $manager = new ImageManager(new Driver());
+
+                // Lê o arquivo temporário do Livewire
+                $image = $manager->read($photoBlock['photo']->getRealPath());
+
+                // Redimensiona a imagem para uma largura máxima de 1024px, mantendo a proporção.
+                // A função 'scaleDown' é ideal, pois só redimensiona se a imagem for maior que o limite.
+                $image->scaleDown(width: 1024);
+
+                // Gera um nome de arquivo único
+                $filename = Str::random(40) . '.' . $photoBlock['photo']->getClientOriginalExtension();
+                $path = 'rental_photos/start/' . $filename;
+
+                // Salva a imagem otimizada no disco 'public'
+                $image->save(storage_path('app/public/' . $path));
+
+                // Armazena o caminho otimizado e a label
+                $photoPaths[] = [
+                    'path' => $path,
+                    'label' => $photoBlock['label'],
+                    'timestamp' => now()->toDateTimeString(),
+                ];
+            }
         }
 
         DB::beginTransaction();
@@ -93,6 +150,7 @@ class RentalManager extends Component
                 'total_amount' => $this->total_amount,
                 'tenant_id' => auth()->user()->tenant_id,
                 'start_photos' => $photoPaths,
+                'uuid' => (string) Str::uuid(),
             ]);
 
             $rental->equipment()->sync($this->selected_equipment);
@@ -130,6 +188,7 @@ class RentalManager extends Component
 
     public function resetForm()
     {
-        $this->reset(['customer_id', 'start_date', 'end_date', 'selected_equipment', 'rental_equipment', 'total_amount', 'start_photos']);
+        $this->reset(['customer_id', 'start_date', 'end_date', 'selected_equipment', 'rental_equipment', 'total_amount', 'startPhotos']);
+        $this->addPhotoField(); // Garante que o primeiro campo de foto esteja presente
     }
 }

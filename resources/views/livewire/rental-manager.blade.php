@@ -80,20 +80,52 @@
                         </div>
 
                         <div class="col-md-12 mt-4">
-                            <label class="form-label">{{ __('Start Photos') }}</label>
-                            <input type="file" class="form-control" wire:model="start_photos" multiple>
-                            @error('start_photos.*')
-                                <span class="text-danger">{{ $message }}</span>
-                            @enderror
+                            <label class="form-label">{{ __('Condition Photos') }}
+                                ({{ __('Start of Rental') }})</label>
 
-                            @if ($start_photos)
-                                <div class="mt-2 d-flex flex-wrap">
-                                    @foreach ($start_photos as $photo)
-                                        <img src="{{ $photo->temporaryUrl() }}"
-                                            style="max-height: 100px; margin-right: 10px;">
-                                    @endforeach
+                            @foreach ($startPhotos as $index => $photoBlock)
+                                <div class="card mb-3 p-3 border" wire:key="photo-{{ $index }}">
+                                    <div class="row g-2 align-items-center">
+
+                                        <div class="col-12 text-end">
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                wire:click="removePhotoField({{ $index }})">
+                                                {{ __('Remove') }}
+                                            </button>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ __('Image') }}</label>
+                                            <input type="file" class="form-control"
+                                                wire:model="startPhotos.{{ $index }}.photo" accept="image/*"
+                                                capture="environment">
+                                            @error('startPhotos.' . $index . '.photo')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+
+                                            {{-- Preview --}}
+                                            @if (isset($photoBlock['photo']))
+                                                <img src="{{ $photoBlock['photo']->temporaryUrl() }}"
+                                                    class="img-fluid mt-2" style="max-height: 100px;">
+                                            @endif
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">{{ __('Description/Label') }}</label>
+                                            <input type="text" class="form-control"
+                                                wire:model.defer="startPhotos.{{ $index }}.label"
+                                                placeholder="{{ __('e.g., Scratch on front, Tire condition') }}">
+                                            @error('startPhotos.' . $index . '.label')
+                                                <span class="text-danger">{{ $message }}</span>
+                                            @enderror
+                                        </div>
+                                    </div>
                                 </div>
-                            @endif
+                            @endforeach
+
+                            <button type="button" class="btn btn-primary mt-2" wire:click="addPhotoField">
+                                <i class="bi bi-plus-circle"></i> {{ __('Add Photo') }}
+                            </button>
                         </div>
 
                         <div class="col-md-12 mt-4">
