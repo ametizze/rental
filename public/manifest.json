@@ -1,8 +1,8 @@
 {
     "name": "EasyRental",
     "short_name": "EasyRental",
-    "theme_color": "#2196F3",
-    "background_color": "#2196F3",
+    "theme_color": "#212529",
+    "background_color": "#212529",
     "display": "standalone",
     "scope": "/",
     "start_url": "/",

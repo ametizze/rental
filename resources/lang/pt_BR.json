@@ -196,5 +196,10 @@
     "Monthly Overview": "Visão Geral Mensal",
     "Accounts Receivable": "Contas a Receber",
     "Accounts Payable": "Contas a Pagar",
-    "Total Customers": "Total de Clientes"
+    "Total Customers": "Total de Clientes",
+    "Confirm Return and Document Condition": "Confirmar Devolução e Documentar Estado",
+    "Confirm Return": "Confirmar Devolução",
+    "Return and Document": "Devolver e Documentar",
+    "Return without Documenting": "Devolver sem Documentar",
+    "Return Equipment": "Devolver Equipamento"
 }
