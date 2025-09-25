@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>{{ config('app.name', 'EasyRental') }}</title>
-    <link rel="manifest" href="{{ asset('manifest.json') }}">
+    <link rel="manifest" href="{{ asset('manifest.json?v=1.0.0') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     @livewireStyles
 </head>
