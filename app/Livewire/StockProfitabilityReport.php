@@ -7,9 +7,12 @@ use App\Models\Transaction;
 use App\Models\MaintenanceLog;
 use Livewire\Component;
 use Illuminate\Support\Facades\DB;
+use Livewire\WithPagination;
 
 class StockProfitabilityReport extends Component
 {
+    use WithPagination; // Adiciona paginação ao relatório
+
     public $reportData = [];
 
     public function mount()
@@ -19,45 +22,41 @@ class StockProfitabilityReport extends Component
 
     public function generateReport()
     {
-        // 1. Receitas de Aluguel (Transações)
-        // Busca transações de aluguel (assumindo que 'rental' é uma categoria ou que receitas de aluguel têm um 'customer_id' e tipo 'income')
-        // *NOTA: Para precisão total, você precisaria de uma tabela 'rentals' mais detalhada.
-        // Assumindo que todas as transações de 'income' vinculadas a um equipamento são receitas de aluguel:
+        $tenantId = auth()->user()->tenant_id;
+
+        // 1. Receita Total de Aluguel por Equipamento
+        // Soma as transações de 'income' que estão ligadas a um equipamento.
         $rentalRevenues = Transaction::select('equipment_id', DB::raw('SUM(amount) as total_revenue'))
+            ->where('tenant_id', $tenantId)
             ->whereNotNull('equipment_id')
             ->where('type', 'income')
             ->groupBy('equipment_id')
             ->get()
             ->keyBy('equipment_id');
 
-        // 2. Custos de Manutenção
+        // 2. Custos Totais de Manutenção por Equipamento
         $maintenanceCosts = MaintenanceLog::select('equipment_id', DB::raw('SUM(cost) as total_maintenance_cost'))
+            ->where('tenant_id', $tenantId)
             ->groupBy('equipment_id')
             ->get()
             ->keyBy('equipment_id');
 
-        // 3. Compilação do Relatório por Equipamento
+        // 3. Compilação do Relatório
+        // Filtra os equipamentos apenas do tenant atual (HasTenant já está ativo)
         $equipments = Equipment::all();
-        $this->reportData = [];
+        $reportData = [];
 
         foreach ($equipments as $equipment) {
-            $revenue = $rentalRevenues->get($equipment->id)->total_revenue ?? 0;
-            $maintenance = $maintenanceCosts->get($equipment->id)->total_maintenance_cost ?? 0;
+            $revenue = $rentalRevenues->get($equipment->id)['total_revenue'] ?? 0;
+            $maintenance = $maintenanceCosts->get($equipment->id)['total_maintenance_cost'] ?? 0;
             $initialCost = $equipment->initial_cost;
 
-            // Custo total acumulado (Custo Inicial + Manutenção)
+            // Cálculos
             $totalCost = $initialCost + $maintenance;
-
-            // Lucro Bruto (Apenas comparando Receita vs Custo de Manutenção)
-            $grossProfit = $revenue - $maintenance;
-
-            // Lucro Líquido Real (Receita - Custo Total)
             $netProfit = $revenue - $totalCost;
-
-            // % de Retorno sobre o Investimento (ROI)
             $roi = $initialCost > 0 ? ($netProfit / $initialCost) * 100 : 0;
 
-            $this->reportData[] = [
+            $reportData[] = [
                 'name' => $equipment->name,
                 'initial_cost' => $initialCost,
                 'total_revenue' => $revenue,
@@ -66,6 +65,8 @@ class StockProfitabilityReport extends Component
                 'roi' => $roi,
             ];
         }
+
+        $this->reportData = $reportData;
     }
 
     public function render()

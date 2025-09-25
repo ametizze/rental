@@ -26,7 +26,9 @@ class Invoice extends Model
         'due_date',
         'notes',
         'photos',
-        'tenant_id'
+        'tenant_id',
+        'paid_amount',
+        'rental_id',
     ];
 
     protected $casts = [
@@ -51,5 +53,15 @@ class Invoice extends Model
     public function items(): HasMany
     {
         return $this->hasMany(InvoiceItem::class);
+    }
+
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function rental(): BelongsTo
+    {
+        return $this->belongsTo(Rental::class);
     }
 }

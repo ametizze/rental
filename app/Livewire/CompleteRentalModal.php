@@ -119,7 +119,9 @@ class CompleteRentalModal extends Component
                 'due_date' => now()->addDays(7),
                 'notes' => __('Invoice automatically generated from rental.') . ' #' . $this->rental->id,
                 'photos' => $photoPaths,
-                'status' => 'unpaid'
+                'status' => 'unpaid',
+                'rental_id' => $this->rental->id,
+
             ]);
 
             // 5. Adiciona os itens da fatura

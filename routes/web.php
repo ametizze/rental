@@ -85,8 +85,10 @@ Route::middleware(['auth'])->group(function () {
 
 // Rota Pública de Impressão (Não Autenticada - Segurança via UUID)
 Route::get('/invoices/{invoice:uuid}/print', function (Invoice $invoice) {
-    // Carrega relações essenciais para a impressão
-    $invoice->load(['customer', 'items', 'tenant', 'rental.equipment']);
+    // Carrega relações essenciais para a impressão:
+    // customers, items, tenant, rental (com equipamento e fotos), E O HISTÓRICO DE PAGAMENTOS.
+    $invoice->load(['customer', 'items', 'tenant', 'rental.equipment', 'payments']);
+
     // Define o locale para 'en' para garantir consistência na impressão
     app()->setLocale('en');
     return view('invoices.print', ['invoice' => $invoice]);

@@ -38,7 +38,7 @@ class ShowInvoice extends Component
             'newPaymentNotes' => 'nullable|string|max:255',
         ]);
 
-        // Calcula o Saldo Devedor
+        // Recalculamos o saldo devedor aqui para ter certeza de que o valor é preciso.
         $balanceDue = $this->invoice->total - $this->invoice->paid_amount;
 
         // 1. Validação Crítica: Não aceitar pagamento maior que o saldo

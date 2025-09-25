@@ -17,6 +17,7 @@
             font-size: 14px;
             line-height: 24px;
             color: #555;
+            border: 1px solid #eee;
         }
 
         .invoice-box table {
@@ -59,17 +60,14 @@
             border-bottom: 1px solid #eee;
         }
 
-        .invoice-box table tr.item.last td {
-            border-bottom: none;
-        }
-
         .invoice-box table tr.total td:nth-child(2) {
             border-top: 2px solid #eee;
             font-weight: bold;
         }
 
         .invoice-box .notes,
-        .invoice-box .photos {
+        .invoice-box .photos,
+        .invoice-box .payments-history {
             margin-top: 30px;
         }
 
@@ -79,19 +77,26 @@
             border: 1px solid #ddd;
         }
 
-        /** Print styles **/
+        .balance-due {
+            font-size: 16px;
+            color: red;
+            font-weight: bold;
+        }
+
+        .status-paid {
+            color: green;
+            font-weight: bold;
+        }
+
+        /** Estilos de Impressão **/
         @media print {
-            body {
-                margin: 0;
-                padding: 0;
-                width: 100%;
-                font-size: 12pt;
+            .invoice-box {
+                border: none;
+                box-shadow: none;
             }
 
-            /** Page settings **/
-            @page {
-                margin: 0.75rem;
-                size: A4;
+            .no-print {
+                display: none;
             }
         }
     </style>
@@ -109,14 +114,15 @@
                                     <img src="{{ asset('storage/' . $invoice->tenant->logo_path) }}"
                                         style="max-width: 150px;">
                                 @else
-                                    <h5>{{ $invoice->tenant->name }}</h5>
+                                    <h5 class="status-paid">{{ $invoice->tenant->name }}</h5>
                                 @endif
                             </td>
                             <td>
-                                {{ __('Invoice') }} #: {{ $invoice->uuid }}<br>
-                                {{ __('Created') }}: {{ $invoice->created_at->format('Y-m-d') }}<br>
-                                {{ __('Due Date') }}: {{ $invoice->due_date->format('Y-m-d') }}<br>
-                                {{ __('Status') }}: {{ __(ucfirst($invoice->status)) }}
+                                <strong>{{ __('Invoice') }} #:</strong> {{ $invoice->uuid }}<br>
+                                <strong>{{ __('Created') }}:</strong> {{ $invoice->created_at->format('Y-m-d') }}<br>
+                                <strong>{{ __('Due Date') }}:</strong> {{ $invoice->due_date->format('Y-m-d') }}<br>
+                                <strong>{{ __('Status') }}:</strong> <span
+                                    class="{{ $invoice->status == 'paid' ? 'status-paid' : 'balance-due' }}">{{ __(ucfirst($invoice->status)) }}</span>
                             </td>
                         </tr>
                     </table>
@@ -127,6 +133,7 @@
                     <table>
                         <tr>
                             <td>
+                                <strong>{{ __('Billed By') }}:</strong><br>
                                 {{ $invoice->tenant->name }}<br>
                                 {{ $invoice->tenant->address }}<br>
                                 {{ $invoice->tenant->city }}, {{ $invoice->tenant->state }}
@@ -134,7 +141,7 @@
                                 {{ $invoice->tenant->email }}
                             </td>
                             <td>
-                                {{ __('Bill To') }}:<br>
+                                <strong>{{ __('Bill To') }}:</strong><br>
                                 {{ $invoice->bill_to_name }}<br>
                                 {{ $invoice->bill_to_email }}<br>
                                 {{ $invoice->bill_to_phone }}
@@ -158,6 +165,7 @@
                     <td></td>
                 </tr>
             @endif
+
             <tr class="heading">
                 <td>{{ __('Description') }}</td>
                 <td>{{ __('Amount') }}</td>
@@ -168,26 +176,72 @@
                     <td>${{ number_format($item->amount, 2) }}</td>
                 </tr>
             @endforeach
+
             <tr class="total">
                 <td></td>
-                <td>
-                    {{ __('Subtotal') }}: ${{ number_format($invoice->subtotal, 2) }}
-                </td>
+                <td>{{ __('Subtotal') }}: ${{ number_format($invoice->subtotal, 2) }}</td>
             </tr>
             <tr class="total">
                 <td></td>
-                <td>
-                    {{ __('Tax') }} ({{ number_format($invoice->tax_rate * 100, 2) }}%):
-                    ${{ number_format($invoice->tax_amount, 2) }}
-                </td>
+                <td>{{ __('Tax') }} ({{ number_format($invoice->tax_rate * 100, 2) }}%):
+                    ${{ number_format($invoice->tax_amount, 2) }}</td>
             </tr>
             <tr class="total">
                 <td></td>
-                <td>
-                    {{ __('Total') }}: ${{ number_format($invoice->total, 2) }}
-                </td>
+                <td><strong>{{ __('Total') }}: ${{ number_format($invoice->total, 2) }}</strong></td>
             </tr>
+            <tr class="total">
+                <td></td>
+                <td class="status-paid">{{ __('Paid Amount') }}: ${{ number_format($invoice->paid_amount, 2) }}</td>
+            </tr>
+            @if ($invoice->status != 'paid')
+                <tr class="total">
+                    <td></td>
+                    <td class="balance-due">{{ __('Balance Due') }}:
+                        ${{ number_format($invoice->total - $invoice->paid_amount, 2) }}</td>
+                </tr>
+            @endif
         </table>
+
+        @if ($invoice->rental && (!empty($invoice->rental->start_photos) || !empty($invoice->rental->end_photos)))
+            <div class="photos">
+                <h4>{{ __('Condition Photos') }}</h4>
+
+                <strong>{{ __('Start of Rental') }}:</strong><br>
+                @foreach ($invoice->rental->start_photos as $photoBlock)
+                    <img src="{{ asset('storage/' . $photoBlock['path']) }}">
+                    <span
+                        style="display: inline-block; font-size: 11px; margin-right: 15px;">{{ $photoBlock['label'] ?? '' }}</span>
+                @endforeach
+                <br><br>
+                <strong>{{ __('End of Rental') }}:</strong><br>
+                @foreach ($invoice->rental->end_photos as $photoBlock)
+                    <img src="{{ asset('storage/' . $photoBlock['path']) }}">
+                    <span
+                        style="display: inline-block; font-size: 11px; margin-right: 15px;">{{ $photoBlock['label'] ?? '' }}</span>
+                @endforeach
+            </div>
+        @endif
+
+        @if (!$invoice->payments->isEmpty())
+            <div class="payments-history">
+                <h4>{{ __('Payment History') }}</h4>
+                <table>
+                    <tr class="heading">
+                        <td>{{ __('Date') }}</td>
+                        <td>{{ __('Amount') }}</td>
+                        <td>{{ __('Notes') }}</td>
+                    </tr>
+                    @foreach ($invoice->payments as $payment)
+                        <tr class="item">
+                            <td>{{ $payment->payment_date->format('Y-m-d') }}</td>
+                            <td>${{ number_format($payment->amount, 2) }}</td>
+                            <td>{{ $payment->notes }}</td>
+                        </tr>
+                    @endforeach
+                </table>
+            </div>
+        @endif
 
         @if (!empty($invoice->notes))
             <div class="notes">
@@ -195,22 +249,6 @@
                 <p>{{ $invoice->notes }}</p>
             </div>
         @endif
-
-        @if ($invoice->rental && (!empty($invoice->rental->start_photos) || !empty($invoice->rental->end_photos)))
-            <div class="photos">
-                <h4>{{ __('Condition Photos') }}</h4>
-                <strong>{{ __('Start of Rental') }}:</strong><br>
-                @foreach ($invoice->rental->start_photos as $photo)
-                    <img src="{{ asset('storage/' . $photo) }}">
-                @endforeach
-                <br>
-                <strong>{{ __('End of Rental') }}:</strong><br>
-                @foreach ($invoice->rental->end_photos as $photo)
-                    <img src="{{ asset('storage/' . $photo) }}">
-                @endforeach
-            </div>
-        @endif
-
     </div>
 
     <script>

@@ -64,6 +64,25 @@ class InvoiceManager extends Component
         ];
     }
 
+    public function markAsPaid($invoiceId)
+    {
+        $invoice = Invoice::findOrFail($invoiceId);
+
+        if ($invoice->status === 'paid') {
+            session()->flash('info', __('Invoice is already paid.'));
+            return;
+        }
+
+        // Seta paid_amount para o total para liquidar a fatura
+        $invoice->update([
+            'paid_amount' => $invoice->total,
+            'status' => 'paid',
+        ]);
+
+        session()->flash('success', __('Invoice successfully marked as paid.'));
+    }
+
+
     public function removeItem($index)
     {
         unset($this->invoiceItems[$index]);

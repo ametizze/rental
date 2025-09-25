@@ -2,6 +2,7 @@
     <div class="row mt-4">
         <div class="col-md-6">
         </div>
+
         <div class="col-md-6 text-end">
             <p><strong>{{ __('Subtotal') }}:</strong> ${{ number_format($invoice->subtotal, 2) }}</p>
             <p><strong>{{ __('Tax') }} ({{ $invoice->tax_rate * 100 }}%):</strong>
@@ -27,9 +28,12 @@
                         <form wire:submit.prevent="addPayment">
                             <div class="mb-3">
                                 <label class="form-label">{{ __('Amount') }}</label>
+                                @php
+                                    $maxDue = $invoice->total - $invoice->paid_amount;
+                                @endphp
                                 <input type="number" step="0.01" class="form-control"
-                                    wire:model.defer="newPaymentAmount" min="0.01"
-                                    max="{{ $invoice->total - $invoice->paid_amount }}">
+                                    wire:model.defer="newPaymentAmount" min="0.01" max="{{ $maxDue }}"
+                                    placeholder="${{ number_format($maxDue, 2) }}">
                                 @error('newPaymentAmount')
                                     <span class="text-danger">{{ $message }}</span>
                                 @enderror

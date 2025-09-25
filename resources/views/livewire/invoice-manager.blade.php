@@ -59,7 +59,7 @@
                                             <td>
                                                 <button type="button" class="btn btn-sm btn-danger"
                                                     wire:click="removeItem({{ $index }})">
-                                                    <i class="fas fa-times"></i>
+                                                    <i class="bi bi-x"></i>
                                                 </button>
                                             </td>
                                         </tr>
@@ -107,40 +107,79 @@
         <div class="card">
             <div class="card-header bg-dark text-white">{{ __('All Invoices') }}</div>
             <div class="card-body">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>{{ __('Invoice #') }}</th>
-                            <th>{{ __('Customer') }}</th>
-                            <th>{{ __('Due Date') }}</th>
-                            <th>{{ __('Total') }}</th>
-                            <th>{{ __('Status') }}</th>
-                            <th>{{ __('Actions') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($invoices as $invoice)
-                            <tr>
-                                <td>#{{ $invoice->id }}</td>
-                                <td>{{ $invoice->customer->name }}</td>
-                                <td>{{ $invoice->due_date->format('Y-m-d') }}</td>
-                                <td>${{ number_format($invoice->total, 2) }}</td>
-                                <td>
-                                    <span class="badge bg-{{ $invoice->status == 'paid' ? 'success' : 'danger' }}">
-                                        {{ __(ucfirst($invoice->status)) }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <a href="{{ route('invoices.show', ['invoice' => $invoice->uuid]) }}"
-                                        class="btn btn-sm btn-info">{{ __('View') }}</a>
-                                    <button wire:click="markAsPaid({{ $invoice->id }})"
-                                        class="btn btn-sm btn-success">{{ __('Mark as Paid') }}</button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-                {{ $invoices->links() }}
+                <div class="container mt-4">
+                    <div>
+                        <h2 class="mb-4">{{ __('Invoice Management') }}</h2>
+
+                        <div class="card">
+                            <div class="card-header bg-dark text-white">{{ __('All Invoices') }}</div>
+                            <div class="card-body">
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ __('Invoice #') }}</th>
+                                            <th>{{ __('Customer') }}</th>
+                                            <th>{{ __('Due Date') }}</th>
+                                            <th>{{ __('Total') }}</th>
+                                            <th>{{ __('Status') }}</th>
+                                            <th>{{ __('Actions') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach ($invoices as $invoice)
+                                            <tr>
+                                                <td>#{{ $invoice->id }}</td>
+                                                <td>{{ $invoice->customer->name }}</td>
+                                                <td>{{ $invoice->due_date->format('Y-m-d') }}</td>
+                                                <td>${{ number_format($invoice->total, 2) }}</td>
+                                                <td>
+                                                    <span
+                                                        class="badge bg-{{ $invoice->status == 'paid' ? 'success' : ($invoice->status == 'partially_paid' ? 'warning' : 'danger') }}">
+                                                        {{ __(ucfirst($invoice->status)) }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group" role="group">
+
+                                                        <a href="{{ route('invoices.show', ['invoice' => $invoice->uuid]) }}"
+                                                            class="btn btn-sm btn-info"
+                                                            title="{{ __('View Details') }}">
+                                                            <i class="bi bi-eye"></i> {{ __('View') }}
+                                                        </a>
+
+                                                        <a href="{{ route('invoices.print', ['invoice' => $invoice->uuid]) }}"
+                                                            target="_blank" class="btn btn-sm btn-dark"
+                                                            title="{{ __('Print / PDF') }}">
+                                                            <i class="bi bi-file-earmark-pdf"></i> {{ __('PDF') }}
+                                                        </a>
+
+                                                        @if ($invoice->status != 'paid')
+                                                            <button wire:click="markAsPaid({{ $invoice->id }})"
+                                                                wire:loading.attr="disabled"
+                                                                wire:confirm="{{ __('Are you sure you want to do this?') }}"
+                                                                class="btn btn-sm btn-success"
+                                                                title="{{ __('Mark as Paid (Full)') }}">
+                                                                <i class="bi bi-check-lg"></i>
+                                                                {{ __('Mark Paid (Full)') }}
+                                                            </button>
+                                                        @endif
+
+                                                        {{-- Botão de Edição (Opção para futuro) --}}
+                                                        {{-- <button class="btn btn-sm btn-warning" title="{{ __('Edit') }}">
+                                            <i class="bi bi-pencil"></i>
+                                        </button> --}}
+
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                                {{ $invoices->links() }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
