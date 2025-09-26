@@ -12,9 +12,11 @@
                 @endif
                 <form wire:submit.prevent="save">
                     <div class="row g-3">
-                        <div class="col-md-4">
+
+                        <div class="col-md-3">
                             <label class="form-label">{{ __('Type') }}</label>
                             <select class="form-control" wire:model.live="type">
+                                <option value="">{{ __('Select Type') }}</option>
                                 <option value="expense">{{ __('Expense') }}</option>
                                 <option value="income">{{ __('Income') }}</option>
                             </select>
@@ -22,17 +24,31 @@
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
-                        <div class="col-md-4">
+
+                        <div class="col-md-3">
                             <label class="form-label">{{ __('Amount') }}</label>
                             <input type="number" step="0.01" class="form-control" wire:model.defer="amount">
                             @error('amount')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
-                        <div class="col-md-4">
+
+                        <div class="col-md-3">
                             <label class="form-label">{{ __('Date') }}</label>
                             <input type="date" class="form-control" wire:model.defer="date">
                             @error('date')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label">{{ __('Status') }}</label>
+                            <select class="form-control" wire:model.defer="status">
+                                @foreach ($statusOptions as $option)
+                                    <option value="{{ $option }}">{{ __(ucfirst($option)) }}</option>
+                                @endforeach
+                            </select>
+                            @error('status')
                                 <span class="text-danger">{{ $message }}</span>
                             @enderror
                         </div>
@@ -69,7 +85,7 @@
                             @enderror
                         </div>
 
-                        <div class="col-md-4" @if ($type !== 'income') style="display: none;" @endif>
+                        <div class="col-md-4">
                             <label class="form-label">{{ __('Due Date') }}</label>
                             <input type="date" class="form-control" wire:model.defer="dueDate">
                             @error('dueDate')
@@ -97,6 +113,29 @@
         <div class="card">
             <div class="card-header bg-dark text-white">{{ __('All Transactions') }}</div>
             <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-5">
+                        <input type="text" class="form-control" wire:model.live.debounce.300ms="search"
+                            placeholder="{{ __('Search by description or customer...') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" wire:model.live="filterType">
+                            <option value="">{{ __('Filter by Type') }}</option>
+                            <option value="income">{{ __('Income') }}</option>
+                            <option value="expense">{{ __('Expense') }}</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" wire:model.live="filterStatus">
+                            <option value="">{{ __('Filter by Status') }}</option>
+                            @foreach ($statusOptions as $option)
+                                <option value="{{ $option }}">{{ __(ucfirst($option)) }}</option>
+                            @endforeach
+                            <option value="overdue">{{ __('Overdue') }}</option>
+                        </select>
+                    </div>
+                </div>
+
                 <table class="table table-striped">
                     <thead>
                         <tr>
@@ -121,15 +160,16 @@
                                 <td>${{ number_format($transaction->amount, 2) }}</td>
                                 <td>{{ $transaction->category->name ?? 'N/A' }}</td>
                                 <td>{{ $transaction->customer->name ?? 'N/A' }}</td>
-                                <td>{{ $transaction->date->format('Y-m-d') }}</td>
-                                <td>{{ $transaction->due_date ? $transaction->due_date->format('Y-m-d') : 'N/A' }}</td>
+                                <td>{{ $transaction->date->format('m/d/Y') }}</td>
+                                <td>{{ $transaction->due_date ? $transaction->due_date->format('m/d/Y') : '' }}</td>
                                 <td>
                                     @php
                                         $status = $transaction->calculated_status;
                                         $color = match ($status) {
-                                            'received' => 'success',
+                                            'received', 'paid' => 'success',
                                             'overdue' => 'danger',
-                                            default => 'secondary',
+                                            'return', 'archived' => 'secondary',
+                                            default => 'info', // Pending
                                         };
                                     @endphp
                                     <span class="badge bg-{{ $color }}">
@@ -139,8 +179,20 @@
                                 <td>
                                     <button wire:click="edit({{ $transaction->id }})"
                                         class="btn btn-sm btn-warning">{{ __('Edit') }}</button>
-                                    <button wire:click="delete({{ $transaction->id }})"
-                                        class="btn btn-sm btn-danger">{{ __('Delete') }}</button>
+
+                                    @if (
+                                        $transaction->type === 'income' &&
+                                            in_array($transaction->calculated_status, ['pending', 'overdue']) &&
+                                            !$transaction->source_id)
+                                        <button wire:click="markReceived({{ $transaction->id }})"
+                                            class="btn btn-sm btn-success">{{ __('Mark Received') }}</button>
+                                    @endif
+
+                                    @if (!$transaction->source_id)
+                                        <button wire:click="delete({{ $transaction->id }})"
+                                            wire:confirm="{{ __('Are you sure you want to delete this transaction?') }}"
+                                            class="btn btn-sm btn-danger">{{ __('Delete') }}</button>
+                                    @endif
                                 </td>
                             </tr>
                         @endforeach
@@ -149,7 +201,6 @@
                 {{ $transactions->links() }}
             </div>
         </div>
-
-        @livewire('category-modal')
     </div>
+    @livewire('category-modal')
 </div>

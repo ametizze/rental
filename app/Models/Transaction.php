@@ -1,5 +1,6 @@
 <?php
 // app/Models/Transaction.php
+
 namespace App\Models;
 
 use App\Models\Traits\HasTenant;
@@ -23,7 +24,7 @@ class Transaction extends Model
         'customer_id',
         'equipment_id',
         'due_date',
-        'status',
+        'status', // Agora pode ser atualizado para 'return', 'archived', etc.
     ];
 
     protected $casts = [
@@ -32,35 +33,42 @@ class Transaction extends Model
         'due_date' => 'date',
     ];
 
-    // Relationships
+    // ... (Método booted permanece o mesmo)
+
+    // Relationships (permanecem os mesmos)
     public function category(): BelongsTo
     {
         return $this->belongsTo(TransactionCategory::class, 'category_id');
     }
-
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
     }
-
     public function equipment(): BelongsTo
     {
         return $this->belongsTo(Equipment::class);
     }
 
-    // Custom accessor to calculate status for reporting
+    /**
+     * Custom accessor to calculate status for reporting.
+     * This defines the hierarchy of statuses (Overdue > Pending > Paid).
+     */
     public function getCalculatedStatusAttribute(): string
     {
-        // If the status is definitively set (e.g., received), return it.
-        if ($this->status === 'received' || $this->status === 'paid') {
-            return 'received';
+        // Statuses definitivos que não mudam (paid/received, archived, return)
+        if (in_array($this->status, ['received', 'paid', 'archived', 'return'])) {
+            return $this->status;
         }
 
-        // Apply overdue logic only to income (receivables) with a due date
-        if ($this->type === 'income' && $this->status === 'pending' && $this->due_date && $this->due_date->isPast()) {
-            return 'overdue';
+        // Se for uma transação de Receita (Income) e tiver vencimento
+        if ($this->type === 'income' && $this->due_date) {
+            // Verifica se está atrasada
+            if ($this->status === 'pending' && $this->due_date->isPast()) {
+                return 'overdue';
+            }
         }
 
-        return $this->status; // Returns 'pending' or 'scheduled'
+        // Retorna o status original para 'pending' ou 'scheduled'
+        return $this->status;
     }
 }

@@ -119,8 +119,8 @@
                             </td>
                             <td>
                                 <strong>{{ __('Invoice') }} #:</strong> {{ $invoice->uuid }}<br>
-                                <strong>{{ __('Created') }}:</strong> {{ $invoice->created_at->format('Y-m-d') }}<br>
-                                <strong>{{ __('Due Date') }}:</strong> {{ $invoice->due_date->format('Y-m-d') }}<br>
+                                <strong>{{ __('Created') }}:</strong> {{ $invoice->created_at->format('m/d/Y') }}<br>
+                                <strong>{{ __('Due Date') }}:</strong> {{ $invoice->due_date->format('m/d/Y') }}<br>
                                 <strong>{{ __('Status') }}:</strong> <span
                                     class="{{ $invoice->status == 'paid' ? 'status-paid' : 'balance-due' }}">{{ __(ucfirst($invoice->status)) }}</span>
                             </td>
@@ -234,7 +234,7 @@
                     </tr>
                     @foreach ($invoice->payments as $payment)
                         <tr class="item">
-                            <td>{{ $payment->payment_date->format('Y-m-d') }}</td>
+                            <td>{{ $payment->payment_date->format('m/d/Y') }}</td>
                             <td>${{ number_format($payment->amount, 2) }}</td>
                             <td>{{ $payment->notes }}</td>
                         </tr>

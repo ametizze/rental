@@ -130,7 +130,7 @@
                                             <tr>
                                                 <td>#{{ $invoice->id }}</td>
                                                 <td>{{ $invoice->customer->name }}</td>
-                                                <td>{{ $invoice->due_date->format('Y-m-d') }}</td>
+                                                <td>{{ $invoice->due_date->format('m/d/Y') }}</td>
                                                 <td>${{ number_format($invoice->total, 2) }}</td>
                                                 <td>
                                                     <span

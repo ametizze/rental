@@ -22,7 +22,8 @@ class Rental extends Model
         'status',
         'start_photos',
         'end_photos',
-        'tenant_id'
+        'tenant_id',
+        'consumables_log'
     ];
 
     protected $casts = [
@@ -30,6 +31,7 @@ class Rental extends Model
         'end_date' => 'date',
         'start_photos' => 'array',
         'end_photos' => 'array',
+        'consumables_log' => 'array',
     ];
 
     /**

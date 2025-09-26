@@ -10,6 +10,19 @@ class MaintenanceLog extends Model
 {
     use HasTenant;
 
+    protected static function booted()
+    {
+        parent::boot();
+
+        // CRUCIAL: This event is triggered before the deletion of the MaintenanceLog.
+        // It ensures that the corresponding transaction is deleted.
+        static::deleting(function (MaintenanceLog $log) {
+            Transaction::where('source_type', MaintenanceLog::class)
+                ->where('source_id', $log->id)
+                ->delete();
+        });
+    }
+
     protected $fillable = [
         'tenant_id',
         'equipment_id',

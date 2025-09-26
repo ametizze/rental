@@ -4,9 +4,11 @@ namespace App\Livewire;
 
 use App\Models\Equipment;
 use App\Models\MaintenanceLog;
+use App\Models\Transaction;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class MaintenanceLogManager extends Component
 {
@@ -30,7 +32,7 @@ class MaintenanceLogManager extends Component
     {
         // Carrega a lista de equipamentos para o formulário
         $this->equipments = Equipment::all();
-        $this->date = Carbon::today()->format('Y-m-d');
+        $this->date = Carbon::today()->format('m/d/Y');
     }
 
     public function save()
@@ -45,10 +47,34 @@ class MaintenanceLogManager extends Component
             'tenant_id' => auth()->user()->tenant_id,
         ];
 
-        MaintenanceLog::updateOrCreate(['id' => $this->logId], $data);
+        // Usaremos uma transação DB para garantir que ambos os registros sejam criados ou nenhum seja.
+        DB::beginTransaction();
 
-        session()->flash('success', $this->logId ? __('Log updated successfully!') : __('Log created successfully!'));
-        $this->resetForm();
+        try {
+            $log = MaintenanceLog::updateOrCreate(['id' => $this->logId], $data);
+
+            // CRUCIAL: Cria a Transação de Despesa (Expense)
+            Transaction::create([
+                'tenant_id' => $log->tenant_id,
+                'type' => 'expense',
+                'amount' => $log->cost,
+                'description' => 'Maintenance Cost for: ' . ($log->equipment->name ?? 'N/A'),
+                'date' => $log->date,
+                'category_id' => null, // Assumindo que a categoria de manutenção será definida em outro lugar
+                'equipment_id' => $log->equipment_id,
+                'source_id' => $log->id,
+                'source_type' => MaintenanceLog::class,
+                'status' => 'received', // Despesa é sempre 'received' quando paga
+            ]);
+
+            DB::commit();
+            session()->flash('success', $this->logId ? __('Log updated successfully!') : __('Log created successfully!'));
+            $this->resetForm();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Transaction creation failed: ' . $e->getMessage());
+            session()->flash('error', __('An error occurred. Please try again.'));
+        }
     }
 
     public function edit(MaintenanceLog $log)
@@ -57,7 +83,7 @@ class MaintenanceLogManager extends Component
         $this->equipmentId = $log->equipment_id;
         $this->cost = $log->cost;
         $this->description = $log->description;
-        $this->date = $log->date->format('Y-m-d');
+        $this->date = $log->date->format('m/d/Y');
     }
 
     public function delete($id)
@@ -69,7 +95,7 @@ class MaintenanceLogManager extends Component
     public function resetForm()
     {
         $this->reset(['logId', 'equipmentId', 'cost', 'description', 'date']);
-        $this->date = Carbon::today()->format('Y-m-d');
+        $this->date = Carbon::today()->format('m/d/Y');
     }
 
     public function render()

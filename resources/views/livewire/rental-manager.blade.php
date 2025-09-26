@@ -80,6 +80,58 @@
                         </div>
 
                         <div class="col-md-12 mt-4">
+                            <h5>{{ __('Stock') }}</h5>
+
+                            <div class="card p-3 mb-3 border">
+                                <label class="form-label">{{ __('Add Stock Item') }}</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <select class="form-select" wire:model.live="newConsumableId">
+                                            <option value="">{{ __('Select Item') }}</option>
+                                            @foreach ($stockItems as $item)
+                                                <option value="{{ $item->id }}"
+                                                    @if ($item->quantity <= 0) disabled @endif>
+                                                    {{ $item->name }} ({{ $item->quantity }} {{ $item->unit }} in
+                                                    stock) - ${{ $item->unit_price }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('newConsumableId')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-3">
+                                        <input type="number" class="form-control"
+                                            wire:model.defer="newConsumableQuantity" placeholder="{{ __('Quantity') }}"
+                                            min="1">
+                                        @error('newConsumableQuantity')
+                                            <span class="text-danger">{{ $message }}</span>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-3">
+                                        <button type="button" class="btn btn-secondary w-100"
+                                            wire:click="addConsumable">{{ __('Add') }}</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <ul class="list-group mt-3">
+                                @forelse ($selectedConsumables as $index => $item)
+                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                        {{ $item['name'] }} ({{ $item['quantity'] }} {{ $item['unit'] }}) -
+                                        ${{ number_format($item['amount'], 2) }}
+                                        <button type="button" class="btn btn-sm btn-danger"
+                                            wire:click="removeConsumable({{ $index }})">{{ __('Remove') }}</button>
+                                    </li>
+                                @empty
+                                    <li class="list-group-item text-muted">{{ __('No consumable items added.') }}</li>
+                                @endforelse
+                            </ul>
+                        </div>
+
+                        <div class="col-md-12 mt-4">
                             <label class="form-label">{{ __('Condition Photos') }}
                                 ({{ __('Start of Rental') }})</label>
 

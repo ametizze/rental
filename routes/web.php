@@ -9,7 +9,9 @@ use App\Livewire\MaintenanceLogManager;
 use App\Livewire\RentalManager;
 use App\Livewire\ShowInvoice;
 use App\Livewire\ShowRental;
+use App\Livewire\StockItemManager;
 use App\Livewire\StockProfitabilityReport;
+use App\Livewire\StockSaleManager;
 use App\Livewire\TenantManager;
 use App\Livewire\TransactionManager;
 use App\Livewire\UserManager;
@@ -71,6 +73,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Perfil do Usuário
     Route::get('/profile', UserProfile::class)->name('profile');
+
+    // Estoque
+    Route::get('/stock', StockItemManager::class)->name('stock');
+    Route::get('/stock/sale', StockSaleManager::class)->name('stock.sale');
 
     // Rotas de Superadmin (Permissão: manage-tenants)
     Route::middleware('can:manage-tenants')->group(function () {

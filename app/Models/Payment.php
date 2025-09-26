@@ -23,6 +23,21 @@ class Payment extends Model
     ];
 
     /**
+     * Define the model events for cascading deletion.
+     */
+    protected static function booted()
+    {
+        parent::boot();
+
+        // CRUCIAL: Delete the associated Transaction record when a Payment is deleted.
+        static::deleting(function (Payment $payment) {
+            Transaction::where('source_type', Payment::class)
+                ->where('source_id', $payment->id)
+                ->delete();
+        });
+    }
+
+    /**
      * Relation: Payment belongs to an Invoice
      */
     public function invoice(): BelongsTo

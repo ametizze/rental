@@ -3,6 +3,8 @@
 namespace App\Livewire;
 
 use App\Models\Equipment;
+use App\Models\Transaction;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
@@ -51,8 +53,8 @@ class EquipmentManager extends Component
             'category' => $this->category,
             'serial' => $this->serial,
             'daily_rate' => $this->daily_rate,
-            'initial_cost' => $this->initialCost, // Salva o custo inicial
-            'purchase_date' => $this->purchaseDate, // Salva a data de compra
+            'initial_cost' => $this->initialCost,
+            'purchase_date' => $this->purchaseDate,
             'status' => $this->status,
         ];
 
@@ -71,9 +73,35 @@ class EquipmentManager extends Component
             $data['photo'] = $path;
         }
 
-        Equipment::updateOrCreate(['id' => $this->equipmentId], $data);
-        session()->flash('success', $this->equipmentId ? 'Equipamento atualizado com sucesso!' : 'Equipamento criado com sucesso!');
-        $this->resetForm();
+        DB::beginTransaction();
+
+        try {
+            // Cria ou Atualiza o Equipamento
+            $equipment = Equipment::updateOrCreate(['id' => $this->equipmentId], $data);
+
+            // 1. CRUCIAL: Cria a Transação de Despesa de Capital (Expense)
+            // Apenas se for uma nova criação e o custo inicial for maior que zero.
+            if (!$this->equipmentId && $equipment->initial_cost > 0) {
+                Transaction::create([
+                    'tenant_id' => $equipment->tenant_id,
+                    'type' => 'expense',
+                    'amount' => $equipment->initial_cost,
+                    'description' => $equipment->name,
+                    'date' => $equipment->purchase_date,
+                    'equipment_id' => $equipment->id,
+                    // Não precisa de source_id, pois o equipamento é o próprio item de origem
+                    'status' => 'received',
+                ]);
+            }
+
+            DB::commit();
+            session()->flash('success', $this->equipmentId ? 'Equipamento atualizado com sucesso!' : 'Equipamento criado com sucesso!');
+            $this->resetForm();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Error saving equipment/transaction: ' . $e->getMessage());
+            session()->flash('error', __('An error occurred. Please try again.'));
+        }
     }
 
     public function edit(Equipment $equipment)
@@ -88,7 +116,7 @@ class EquipmentManager extends Component
 
         // Carrega os novos campos
         $this->initialCost = $equipment->initial_cost;
-        $this->purchaseDate = $equipment->purchase_date ? $equipment->purchase_date->format('Y-m-d') : null;
+        $this->purchaseDate = $equipment->purchase_date ? $equipment->purchase_date->format('m/d/Y') : null;
     }
 
     public function resetForm()

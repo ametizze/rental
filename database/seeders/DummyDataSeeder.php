@@ -51,7 +51,7 @@ class DummyDataSeeder extends Seeder
             Equipment::create(array_merge($data, [
                 'qr_uuid' => Str::uuid(),
                 'tenant_id' => $tenant->id,
-                'purchase_date' => Carbon::now()->subMonths(7)->format('Y-m-d')
+                'purchase_date' => Carbon::now()->subMonths(7)->format('m/d/Y')
             ]));
         }
         $equipment = Equipment::where('tenant_id', $tenant->id)->get();

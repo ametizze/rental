@@ -76,7 +76,7 @@
                                 <td>{{ $log->equipment->name ?? 'N/A' }}</td>
                                 <td>${{ number_format($log->cost, 2) }}</td>
                                 <td>{{ $log->description }}</td>
-                                <td>{{ $log->date->format('Y-m-d') }}</td>
+                                <td>{{ $log->date->format('m/d/Y') }}</td>
                                 <td>
                                     <button wire:click="edit({{ $log->id }})"
                                         class="btn btn-sm btn-warning">{{ __('Edit') }}</button>

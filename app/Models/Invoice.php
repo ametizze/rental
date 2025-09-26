@@ -40,6 +40,21 @@ class Invoice extends Model
         'photos' => 'array',
     ];
 
+    /**
+     * Define the model events for cascading deletion.
+     */
+    protected static function booted()
+    {
+        parent::boot();
+
+        // CRUCIAL: Delete Payments when an Invoice is deleted.
+        // The Payment model's 'deleting' event (Step 1) will then cascade to the Transaction table.
+        static::deleting(function (Invoice $invoice) {
+            $invoice->payments()->delete();
+            // $invoice->invoiceItems()->delete(); // Uncomment if you have this model
+        });
+    }
+
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);

@@ -27,7 +27,7 @@ class ShowInvoice extends Component
         $this->invoice = $invoice->load(['customer', 'items', 'payments', 'tenant', 'rental.equipment']);
 
         // Define a data de hoje como padrão para o pagamento
-        $this->newPaymentDate = now()->format('Y-m-d');
+        $this->newPaymentDate = now()->format('m/d/Y');
     }
 
     public function addPayment()
@@ -38,41 +38,59 @@ class ShowInvoice extends Component
             'newPaymentNotes' => 'nullable|string|max:255',
         ]);
 
-        // Recalculamos o saldo devedor aqui para ter certeza de que o valor é preciso.
         $balanceDue = $this->invoice->total - $this->invoice->paid_amount;
 
-        // 1. Validação Crítica: Não aceitar pagamento maior que o saldo
         if (round($this->newPaymentAmount, 2) > round($balanceDue, 2)) {
             session()->flash('error', __('The payment amount exceeds the balance due.'));
             return;
         }
 
-        // 2. Cria o registro de pagamento
-        Payment::create([
-            'tenant_id' => $this->invoice->tenant_id,
-            'invoice_id' => $this->invoice->id,
-            'amount' => $this->newPaymentAmount,
-            'payment_date' => $this->newPaymentDate,
-            'notes' => $this->newPaymentNotes,
-        ]);
+        DB::beginTransaction();
 
-        // 3. Atualiza a fatura: Incrementa o valor pago
-        $this->invoice->paid_amount += $this->newPaymentAmount;
+        try {
+            // 1. Cria o registro de pagamento (Histórico)
+            $payment = Payment::create([
+                'tenant_id' => $this->invoice->tenant_id,
+                'invoice_id' => $this->invoice->id,
+                'amount' => $this->newPaymentAmount,
+                'payment_date' => $this->newPaymentDate,
+                'notes' => $this->newPaymentNotes,
+            ]);
 
-        // 4. Define o Status Final
-        if (round($this->invoice->paid_amount, 2) >= round($this->invoice->total, 2)) {
-            $this->invoice->status = 'paid';
-        } else {
-            $this->invoice->status = 'partially_paid';
+            // 2. CRUCIAL: Cria a Transação de Receita (Unified Ledger)
+            Transaction::create([
+                'tenant_id' => $this->invoice->tenant_id,
+                'type' => 'income',
+                'amount' => $this->newPaymentAmount,
+                'description' => 'Invoice Payment: #' . $this->invoice->uuid . ' (Partial)',
+                'date' => $this->newPaymentDate,
+                'source_id' => $payment->id, // Vincula à tabela de pagamentos
+                'source_type' => Payment::class,
+                'customer_id' => $this->invoice->customer_id,
+                'status' => 'received', // O pagamento já ocorreu
+            ]);
+
+            // 3. Atualiza a fatura: Incrementa o valor pago e status
+            $this->invoice->paid_amount += $this->newPaymentAmount;
+
+            if (round($this->invoice->paid_amount, 2) >= round($this->invoice->total, 2)) {
+                $this->invoice->status = 'paid';
+            } else {
+                $this->invoice->status = 'partially_paid';
+            }
+
+            $this->invoice->save();
+
+            DB::commit();
+
+            $this->invoice->refresh();
+            session()->flash('success', __('Payment added successfully.'));
+            $this->reset(['newPaymentAmount', 'newPaymentDate', 'newPaymentNotes']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error('Transaction creation failed: ' . $e->getMessage());
+            session()->flash('error', __('An error occurred. Please try again.'));
         }
-
-        $this->invoice->save();
-
-        // 5. Recarrega o componente (a si próprio) para atualizar as tabelas e o saldo
-        $this->invoice->refresh();
-
-        session()->flash('success', __('Payment added successfully.'));
-        $this->reset(['newPaymentAmount', 'newPaymentDate', 'newPaymentNotes']);
     }
 
     public function render()

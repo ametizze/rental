@@ -25,6 +25,9 @@
                             <a class="nav-link" href="{{ route('equipment') }}" wire:navigate>{{ __('Equipment') }}</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" href="{{ route('stock') }}" wire:navigate>{{ __('Stock') }}</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" href="{{ route('rentals') }}" wire:navigate>{{ __('Rentals') }}</a>
                         </li>
                         <li class="nav-item">

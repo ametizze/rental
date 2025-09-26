@@ -124,7 +124,7 @@ class CompleteRentalModal extends Component
 
             ]);
 
-            // 5. Adiciona os itens da fatura
+            // 5. Adiciona os itens da fatura (Equipamentos)
             foreach ($this->rental->equipment as $equipment) {
                 $days = $this->rental->start_date->diffInDays($this->rental->end_date) + 1;
                 InvoiceItem::create([
@@ -134,6 +134,19 @@ class CompleteRentalModal extends Component
                     'rate' => $equipment->daily_rate,
                     'amount' => $equipment->daily_rate * $days,
                 ]);
+            }
+
+            // NOVO: Adiciona itens consumíveis (Stock Items) à fatura
+            if (!empty($this->rental->consumables_log)) {
+                foreach ($this->rental->consumables_log as $consumable) {
+                    InvoiceItem::create([
+                        'invoice_id' => $invoice->id,
+                        'description' => $consumable['name'] . ' (' . $consumable['unit'] . ' item)',
+                        'quantity' => $consumable['quantity'],
+                        'rate' => $consumable['unit_price'],
+                        'amount' => $consumable['amount'],
+                    ]);
+                }
             }
 
             DB::commit();

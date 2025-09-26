@@ -8,6 +8,7 @@
     <title>{{ config('app.name', 'EasyRental') }}</title>
     <link rel="manifest" href="{{ asset('manifest.json?v=1.0.0') }}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     @livewireStyles
 </head>

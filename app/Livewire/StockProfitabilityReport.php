@@ -4,14 +4,14 @@ namespace App\Livewire;
 
 use App\Models\Equipment;
 use App\Models\Transaction;
-use App\Models\MaintenanceLog;
+use App\Models\MaintenanceLog; // Manter este import se você precisar de source_type
 use Livewire\Component;
-use Illuminate\Support\Facades\DB;
 use Livewire\WithPagination;
+use Illuminate\Support\Facades\DB;
 
 class StockProfitabilityReport extends Component
 {
-    use WithPagination; // Adiciona paginação ao relatório
+    use WithPagination;
 
     public $reportData = [];
 
@@ -23,44 +23,37 @@ class StockProfitabilityReport extends Component
     public function generateReport()
     {
         $tenantId = auth()->user()->tenant_id;
-
-        // 1. Receita Total de Aluguel por Equipamento
-        // Soma as transações de 'income' que estão ligadas a um equipamento.
-        $rentalRevenues = Transaction::select('equipment_id', DB::raw('SUM(amount) as total_revenue'))
-            ->where('tenant_id', $tenantId)
-            ->whereNotNull('equipment_id')
-            ->where('type', 'income')
-            ->groupBy('equipment_id')
-            ->get()
-            ->keyBy('equipment_id');
-
-        // 2. Custos Totais de Manutenção por Equipamento
-        $maintenanceCosts = MaintenanceLog::select('equipment_id', DB::raw('SUM(cost) as total_maintenance_cost'))
-            ->where('tenant_id', $tenantId)
-            ->groupBy('equipment_id')
-            ->get()
-            ->keyBy('equipment_id');
-
-        // 3. Compilação do Relatório
-        // Filtra os equipamentos apenas do tenant atual (HasTenant já está ativo)
-        $equipments = Equipment::all();
         $reportData = [];
 
+        // 1. Unify all costs and revenues from the 'transactions' table
+        $unifiedTransactions = Transaction::select('equipment_id', 'type', DB::raw('SUM(amount) as total_amount'))
+            ->where('tenant_id', $tenantId)
+            ->whereNotNull('equipment_id')
+            ->groupBy('equipment_id', 'type')
+            ->get()
+            ->groupBy('equipment_id');
+
+        // 2. Compile the report by iterating over all equipment
+        $equipments = Equipment::all();
+
         foreach ($equipments as $equipment) {
-            $revenue = $rentalRevenues->get($equipment->id)['total_revenue'] ?? 0;
-            $maintenance = $maintenanceCosts->get($equipment->id)['total_maintenance_cost'] ?? 0;
+            $equipmentTransactions = $unifiedTransactions->get($equipment->id) ?? collect();
+
+            // Sum revenues and expenses for this equipment from the unified collection
+            $totalRevenue = $equipmentTransactions->where('type', 'income')->sum('total_amount');
+            $totalExpenses = $equipmentTransactions->where('type', 'expense')->sum('total_amount');
             $initialCost = $equipment->initial_cost;
 
-            // Cálculos
-            $totalCost = $initialCost + $maintenance;
-            $netProfit = $revenue - $totalCost;
+            // Since initial cost is also an expense in transactions, we add it here
+            $netProfit = $totalRevenue - $totalExpenses;
+
             $roi = $initialCost > 0 ? ($netProfit / $initialCost) * 100 : 0;
 
             $reportData[] = [
                 'name' => $equipment->name,
                 'initial_cost' => $initialCost,
-                'total_revenue' => $revenue,
-                'total_maintenance_cost' => $maintenance,
+                'total_revenue' => $totalRevenue,
+                'total_maintenance_cost' => $totalExpenses - $initialCost, // Maintenance is total expenses minus initial cost
                 'net_profit' => $netProfit,
                 'roi' => $roi,
             ];

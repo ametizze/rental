@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Rental;
 use App\Models\Customer;
 use App\Models\Equipment;
+use App\Models\StockItem;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
@@ -25,6 +26,11 @@ class RentalManager extends Component
     public $rental_equipment = [];
     public $total_amount = 0;
     public $startPhotos = [];
+
+    public $stockItems = []; // List all stock items for consumables
+    public $selectedConsumables = []; // Items that were added to the rental
+    public $newConsumableId; // ID of the selected item in the dropdown
+    public $newConsumableQuantity; // Quantity to be rented/sold
 
     public function rules()
     {
@@ -59,17 +65,18 @@ class RentalManager extends Component
 
     public function calculateTotalAmount()
     {
-        $this->total_amount = 0;
+        $equipmentTotal = 0;
+        $consumablesTotal = 0;
+
         if ($this->start_date && $this->end_date && count($this->selected_equipment) > 0) {
-            $startDate = Carbon::parse($this->start_date);
-            $endDate = Carbon::parse($this->end_date);
-            $days = $startDate->diffInDays($endDate) + 1;
-
-            $equipment = Equipment::find($this->selected_equipment);
-            $total = $equipment->sum('daily_rate') * $days;
-
-            $this->total_amount = $total;
+            $days = Carbon::parse($this->start_date)->diffInDays(Carbon::parse($this->end_date)) + 1;
+            $equipmentTotal = Equipment::find($this->selected_equipment)->sum('daily_rate') * $days;
         }
+
+        // Soma o total dos consumíveis selecionados
+        $consumablesTotal = collect($this->selectedConsumables)->sum('amount');
+
+        $this->total_amount = $equipmentTotal + $consumablesTotal;
     }
 
     public function toggleEquipmentSelection($id)
@@ -89,6 +96,9 @@ class RentalManager extends Component
 
     public function mount()
     {
+        $this->addPhotoField();
+
+        $this->stockItems = StockItem::all();
         $this->addPhotoField();
     }
 
@@ -151,11 +161,20 @@ class RentalManager extends Component
                 'tenant_id' => auth()->user()->tenant_id,
                 'start_photos' => $photoPaths,
                 'uuid' => (string) Str::uuid(),
+                'consumables_log' => $this->selectedConsumables,
             ]);
 
             $rental->equipment()->sync($this->selected_equipment);
 
             Equipment::whereIn('id', $this->selected_equipment)->update(['status' => 'rented']);
+
+            foreach ($this->selectedConsumables as $consumable) {
+                // Diminuir a quantidade no estoque
+                StockItem::where('id', $consumable['stock_item_id'])->decrement('quantity', $consumable['quantity']);
+
+                // Nota: O item consumível será adicionado à fatura no momento da criação da fatura,
+                // mas você pode salvá-lo em uma coluna JSON no Rental ou em uma tabela pivot.
+            }
 
             DB::commit();
             session()->flash('success', __('Rental created successfully.'));
@@ -170,6 +189,46 @@ class RentalManager extends Component
     public function openCompleteRentalModal(int $rentalId)
     {
         $this->dispatch('openCompleteRentalModal', rentalId: $rentalId);
+    }
+
+    public function loadStockItems()
+    {
+        $this->stockItems = StockItem::all();
+    }
+
+    public function addConsumable()
+    {
+        $this->validate([
+            'newConsumableId' => 'required|exists:stock_items,id',
+            'newConsumableQuantity' => 'required|integer|min:1',
+        ]);
+
+        $item = $this->stockItems->find($this->newConsumableId);
+
+        // Validação de saldo em estoque
+        if ($this->newConsumableQuantity > $item->quantity) {
+            session()->flash('error', __('Stock is insufficient for this item.'));
+            return;
+        }
+
+        $this->selectedConsumables[] = [
+            'stock_item_id' => $item->id,
+            'name' => $item->name,
+            'unit' => $item->unit,
+            'unit_price' => $item->unit_price,
+            'quantity' => $this->newConsumableQuantity,
+            'amount' => $item->unit_price * $this->newConsumableQuantity,
+        ];
+
+        $this->calculateTotalAmount();
+        $this->reset(['newConsumableId', 'newConsumableQuantity']);
+    }
+
+    public function removeConsumable($index)
+    {
+        unset($this->selectedConsumables[$index]);
+        $this->selectedConsumables = array_values($this->selectedConsumables);
+        $this->calculateTotalAmount();
     }
 
     public function render()
