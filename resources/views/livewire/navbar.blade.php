@@ -16,25 +16,27 @@
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     @auth
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('dashboard') }}">{{ __('Dashboard') }}</a>
+                            <a class="nav-link" href="{{ route('dashboard') }}" wire:navigate>{{ __('Dashboard') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('customers') }}">{{ __('Customers') }}</a>
+                            <a class="nav-link" href="{{ route('customers') }}" wire:navigate>{{ __('Customers') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('equipment') }}">{{ __('Equipment') }}</a>
+                            <a class="nav-link" href="{{ route('equipment') }}" wire:navigate>{{ __('Equipment') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('rentals') }}">{{ __('Rentals') }}</a>
+                            <a class="nav-link" href="{{ route('rentals') }}" wire:navigate>{{ __('Rentals') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('maintenance') }}">{{ __('Maintenance') }}</a>
+                            <a class="nav-link" href="{{ route('maintenance') }}"
+                                wire:navigate>{{ __('Maintenance') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('invoices') }}">{{ __('Invoices') }}</a>
+                            <a class="nav-link" href="{{ route('invoices') }}" wire:navigate>{{ __('Invoices') }}</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{{ route('transactions') }}">{{ __('Transactions') }}</a>
+                            <a class="nav-link" href="{{ route('transactions') }}"
+                                wire:navigate>{{ __('Transactions') }}</a>
                         </li>
 
                         <li class="nav-item dropdown">

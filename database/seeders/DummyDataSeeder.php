@@ -1,5 +1,4 @@
 <?php
-// database/seeders/DummyDataSeeder.php
 
 namespace Database\Seeders;
 
@@ -16,11 +15,15 @@ use Carbon\Carbon;
 
 class DummyDataSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
+        // Get the single demo tenant created in TenantSeeder
         $tenant = Tenant::first();
 
-        // --- Clientes de Demonstração ---
+        // --- 1. Seed Demo Customers ---
         $customersData = [
             ['name' => 'GreenScape Landscaping', 'email' => 'contact@greenscape.com', 'phone' => '+1 (555) 100-0100'],
             ['name' => 'City Renovations', 'email' => 'info@cityrenovations.com', 'phone' => '+1 (555) 200-0200'],
@@ -35,23 +38,26 @@ class DummyDataSeeder extends Seeder
         $customers = Customer::where('tenant_id', $tenant->id)->get();
         echo "Customers seeded for {$tenant->name}\n";
 
-        // --- Equipamentos de Demonstração ---
+        // --- 2. Seed Demo Equipment (with initial cost for profit tracking) ---
         $equipmentData = [
-            ['name' => 'Electric Tile Saw', 'category' => 'Tile', 'serial' => 'TS-8842', 'daily_rate' => 65.00],
-            ['name' => 'Drywall Lift', 'category' => 'Drywall', 'serial' => 'DL-3391', 'daily_rate' => 40.00],
-            ['name' => 'Power Trowel 36"', 'category' => 'Concrete', 'serial' => 'PT-7620', 'daily_rate' => 85.00],
-            ['name' => 'Floor Sander', 'category' => 'Flooring', 'serial' => 'FS-1100', 'daily_rate' => 95.00],
-            ['name' => 'Concrete Mixer', 'category' => 'Concrete', 'serial' => 'CM-2500', 'daily_rate' => 75.00],
-            ['name' => 'Pressure Washer', 'category' => 'Cleaning', 'serial' => 'PW-4000', 'daily_rate' => 50.00],
+            ['name' => 'Electric Tile Saw', 'category' => 'Tile', 'serial' => 'TS-8842', 'daily_rate' => 65.00, 'initial_cost' => 850.00],
+            ['name' => 'Drywall Lift', 'category' => 'Drywall', 'serial' => 'DL-3391', 'daily_rate' => 40.00, 'initial_cost' => 500.00],
+            ['name' => 'Power Trowel 36"', 'category' => 'Concrete', 'serial' => 'PT-7620', 'daily_rate' => 85.00, 'initial_cost' => 1200.00],
+            ['name' => 'Floor Sander', 'category' => 'Flooring', 'serial' => 'FS-1100', 'daily_rate' => 95.00, 'initial_cost' => 3000.00],
+            ['name' => 'Pressure Washer', 'category' => 'Cleaning', 'serial' => 'PW-4000', 'daily_rate' => 50.00, 'initial_cost' => 600.00],
         ];
 
         foreach ($equipmentData as $data) {
-            Equipment::create(array_merge($data, ['qr_uuid' => Str::uuid(), 'tenant_id' => $tenant->id]));
+            Equipment::create(array_merge($data, [
+                'qr_uuid' => Str::uuid(),
+                'tenant_id' => $tenant->id,
+                'purchase_date' => Carbon::now()->subMonths(7)->format('Y-m-d')
+            ]));
         }
         $equipment = Equipment::where('tenant_id', $tenant->id)->get();
         echo "Equipment seeded for {$tenant->name}\n";
 
-        // --- Geração de Dados Fictícios de 3 Meses ---
+        // --- 3. Generate 3 Months of Rentals, Invoices, and Transactions ---
         $startDate = Carbon::now()->subMonths(3)->startOfMonth();
         $endDate = Carbon::now();
 
@@ -59,10 +65,12 @@ class DummyDataSeeder extends Seeder
 
         while ($currentDate->lte($endDate)) {
             $numRentals = rand(1, 3);
+            $taxRate = json_decode($tenant->settings, true)['tax_rate'] ?? 0.0;
 
             for ($i = 0; $i < $numRentals; $i++) {
                 $customer = $customers->random();
-                $rentalEquipment = $equipment->random(rand(1, 2));
+                // Ensure unique equipment selection for the rental
+                $rentalEquipment = $equipment->random(rand(1, min(count($equipment), 2)));
 
                 $rentalStartDate = $currentDate->copy()->addDays(rand(0, 5));
                 $rentalEndDate = $rentalStartDate->copy()->addDays(rand(1, 7));
@@ -74,29 +82,45 @@ class DummyDataSeeder extends Seeder
                     $totalAmountWithoutTax += $item->daily_rate * $days;
                 }
 
-                $tenantSettings = json_decode($tenant->settings, true);
-                $taxRate = $tenantSettings['tax_rate'] ?? 0;
                 $taxAmount = $totalAmountWithoutTax * $taxRate;
                 $grandTotal = $totalAmountWithoutTax + $taxAmount;
+                $isFullyPaid = rand(0, 1);
 
-                // 1. Cria o Aluguel (Rental)
+                // --- 3a. Create Rental (The core activity) ---
                 $rental = Rental::create([
-                    // ... (Campos do Rental)
+                    'tenant_id' => $tenant->id,
+                    'customer_id' => $customer->id,
+                    'start_date' => $rentalStartDate,
+                    'end_date' => $rentalEndDate,
+                    'total_amount' => $grandTotal,
+                    'status' => 'completed',
+                    'uuid' => Str::uuid(),
                 ]);
                 $rental->equipment()->sync($rentalEquipment->pluck('id')->toArray());
 
-                // 2. Cria a Fatura (Invoice)
+                // --- 3b. Create Invoice (The financial document) ---
                 $invoice = Invoice::create([
-                    // ... (Campos do Invoice)
+                    'uuid' => Str::uuid(),
+                    'tenant_id' => $tenant->id,
+                    'customer_id' => $customer->id,
+                    'rental_id' => $rental->id, // The crucial link to the rental
+                    'bill_to_name' => $customer->name,
+                    'bill_to_email' => $customer->email,
+                    'bill_to_phone' => $customer->phone,
+                    'tax_rate' => $taxRate,
+                    'subtotal' => $totalAmountWithoutTax,
+                    'tax_amount' => $taxAmount,
+                    'total' => $grandTotal,
+                    'paid_amount' => $isFullyPaid ? $grandTotal : 0, // Set paid amount for status
+                    'status' => $isFullyPaid ? 'paid' : 'unpaid',
+                    'due_date' => $rentalEndDate->copy()->addDays(7),
                 ]);
 
-                // 3. Cria os Itens da Fatura e as Transações de Receita
-                $isPaid = rand(0, 1);
-
+                // --- 3c. Create Invoice Items and Income Transactions ---
                 foreach ($rentalEquipment as $item) {
                     $itemRevenue = $item->daily_rate * $days;
 
-                    // Cria o Item da Fatura
+                    // Create Invoice Item
                     InvoiceItem::create([
                         'invoice_id' => $invoice->id,
                         'description' => $item->name . ' (Rental)',
@@ -105,16 +129,16 @@ class DummyDataSeeder extends Seeder
                         'amount' => $itemRevenue,
                     ]);
 
-                    // **Cria a Transação de Receita para o Equipamento**
-                    if ($isPaid) {
+                    // Create Income Transaction (only if paid, for Dashboard accuracy)
+                    if ($isFullyPaid) {
                         Transaction::create([
                             'tenant_id' => $tenant->id,
                             'type' => 'income',
-                            'amount' => $itemRevenue, // A receita sem imposto é vinculada ao equipamento
+                            'amount' => $itemRevenue,
                             'description' => 'Rental Revenue: ' . $item->name,
                             'source_id' => $invoice->id,
                             'source_type' => Invoice::class,
-                            'equipment_id' => $item->id, // <--- O ELO PERDIDO
+                            'equipment_id' => $item->id, // The link for Profit Report
                             'date' => $rentalEndDate,
                             'status' => 'received'
                         ]);

@@ -1,9 +1,9 @@
     <div>
         <div class="container my-5">
             <div class="row justify-content-center">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="card shadow-lg">
-                        <div class="card-header bg-primary text-white text-center">
+                        <div class="card-header bg-secondary text-white text-center">
                             <h4>{{ __('Login') }}</h4>
                         </div>
                         <div class="card-body">
