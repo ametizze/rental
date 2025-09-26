@@ -5,6 +5,8 @@ namespace App\Livewire;
 
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\StockItem;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Illuminate\Support\Str;
@@ -121,6 +123,51 @@ class InvoiceManager extends Component
         }
 
         $this->resetForm();
+    }
+
+    /**
+     * Exclui a fatura e executa a lógica de estorno de estoque, se aplicável.
+     * * @param int $invoiceId
+     * @return void
+     */
+    public function deleteInvoice($invoiceId)
+    {
+        // Inicia a transação para garantir que o estoque só seja estornado se a fatura for deletada
+        DB::beginTransaction();
+        try {
+            $invoice = Invoice::findOrFail($invoiceId);
+
+            // 1. CHECAGEM CRÍTICA: Bloqueia a exclusão se houver pagamentos.
+            // O valor deve ser zero, pois pagamentos parciais são rastreados.
+            if ($invoice->paid_amount > 0) {
+                session()->flash('error', __('Cannot delete invoice: It has payments recorded. Please refund/delete payments first.'));
+                DB::rollBack();
+                return;
+            }
+
+            // 2. ESTORNO DE ESTOQUE (Se for uma venda rápida)
+            // Filtra os itens da fatura que têm um link direto para um StockItem.
+            $stockItemsToRestore = $invoice->items->filter(fn($item) => $item->stock_item_id !== null);
+
+            if ($stockItemsToRestore->isNotEmpty()) {
+                foreach ($stockItemsToRestore as $item) {
+                    // Usa o ID da chave estrangeira para incrementar (devolver) o estoque.
+                    StockItem::where('id', $item->stock_item_id)->increment('quantity', $item->quantity);
+                }
+            }
+
+            // 3. EXCLUSÃO FINAL E COMMIT
+            // A exclusão da Invoice deve, por sua vez, acionar a exclusão em cascata dos InvoiceItems.
+            $invoice->delete();
+
+            DB::commit();
+            session()->flash('success', __('Invoice deleted successfully and stock (if applicable) has been restored.'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            // Em um ambiente de produção, registre o erro completo para debug.
+            \Log::error("Failed to delete invoice {$invoiceId}: " . $e->getMessage());
+            session()->flash('error', __('An error occurred while deleting the invoice.'));
+        }
     }
 
     public function resetForm()

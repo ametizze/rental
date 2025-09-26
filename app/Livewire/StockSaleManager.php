@@ -139,6 +139,7 @@ class StockSaleManager extends Component
                     'quantity' => $item['quantity'],
                     'rate' => $item['unit_price'],
                     'amount' => $item['amount'],
+                    'stock_item_id' => $item['id'], // Link to stock item for traceability
                 ]);
             }
 

@@ -79,4 +79,14 @@ class Invoice extends Model
     {
         return $this->belongsTo(Rental::class);
     }
+
+    public function isPaid(): bool
+    {
+        return $this->status === 'paid' && $this->paid_amount >= $this->total;
+    }
+
+    public function transactions()
+    {
+        return $this->hasManyThrough(Transaction::class, Payment::class);
+    }
 }

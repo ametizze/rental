@@ -164,10 +164,11 @@
                                                             </button>
                                                         @endif
 
-                                                        {{-- Botão de Edição (Opção para futuro) --}}
-                                                        {{-- <button class="btn btn-sm btn-warning" title="{{ __('Edit') }}">
-                                            <i class="bi bi-pencil"></i>
-                                        </button> --}}
+                                                        <button wire:click="deleteInvoice({{ $invoice->id }})"
+                                                            wire:confirm="{{ __('Are you sure you want to delete this invoice? Stock will be restored.') }}"
+                                                            class="btn btn-sm btn-danger">
+                                                            {{ __('Delete') }}
+                                                        </button>
 
                                                     </div>
                                                 </td>
