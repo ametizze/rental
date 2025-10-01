@@ -97,9 +97,9 @@ class RentalManager extends Component
     public function mount()
     {
         $this->addPhotoField();
+        $this->loadStockItems();
 
         $this->stockItems = StockItem::all();
-        $this->addPhotoField();
     }
 
     public function addPhotoField()
