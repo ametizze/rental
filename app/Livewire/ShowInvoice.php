@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Invoice;
 use App\Models\Payment;
+use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 use Livewire\Attributes\Validate;
 
