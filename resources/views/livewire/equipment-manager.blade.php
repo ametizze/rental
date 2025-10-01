@@ -25,6 +25,15 @@
                             @enderror
                         </div>
 
+                        <div class="col-md-4">
+                            <label class="form-label">{{ __('Reference Code') }}</label>
+                            <input type="text" class="form-control" wire:model.defer="ref_code"
+                                placeholder="21, A1, etc.">
+                            @error('ref_code')
+                                <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+
                         <div class="col-md-6">
                             <label class="form-label">{{ __('Category') }}</label>
                             <select class="form-control" wire:model.defer="category">

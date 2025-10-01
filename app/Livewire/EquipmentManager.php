@@ -18,6 +18,7 @@ class EquipmentManager extends Component
 
     public $equipmentId;
     public $name, $category, $serial, $daily_rate, $status = 'available';
+    public $ref_code = '';
     public $qrCode;
     public $existingPhoto;
 
@@ -32,6 +33,12 @@ class EquipmentManager extends Component
 
     protected function rules()
     {
+        // If editing, exclude current equipment from unique check
+        $refCodeRule = 'nullable|string|max:10|unique:equipment,ref_code';
+        if ($this->equipmentId) {
+            $refCodeRule = 'nullable|string|max:10|unique:equipment,ref_code,' . $this->equipmentId;
+        }
+
         return [
             'name'       => 'required|string|max:255',
             'category'   => 'nullable|string|max:255',
@@ -41,6 +48,7 @@ class EquipmentManager extends Component
             'status'     => 'required|string',
             'initialCost' => 'required|numeric|min:0', // Novo
             'purchaseDate' => 'required|date',        // Novo
+            'ref_code' => $refCodeRule
         ];
     }
 
@@ -54,6 +62,7 @@ class EquipmentManager extends Component
             'serial' => $this->serial,
             'daily_rate' => $this->daily_rate,
             'initial_cost' => $this->initialCost,
+            'ref_code' => $this->ref_code,
             'purchase_date' => $this->purchaseDate,
             'status' => $this->status,
         ];
@@ -110,6 +119,7 @@ class EquipmentManager extends Component
         $this->name = $equipment->name;
         $this->category = $equipment->category;
         $this->serial = $equipment->serial;
+        $this->ref_code = $equipment->ref_code;
         $this->daily_rate = $equipment->daily_rate;
         $this->status = $equipment->status;
         $this->existingPhoto = $equipment->photo;

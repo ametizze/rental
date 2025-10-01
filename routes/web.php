@@ -6,6 +6,7 @@ use App\Livewire\EquipmentManager;
 use App\Livewire\InvoiceManager;
 use App\Livewire\Login;
 use App\Livewire\MaintenanceLogManager;
+use App\Livewire\QuickRentManager;
 use App\Livewire\RentalManager;
 use App\Livewire\ShowInvoice;
 use App\Livewire\ShowRental;
@@ -63,6 +64,7 @@ Route::middleware(['auth'])->group(function () {
     // Módulo de Aluguéis
     Route::get('/rentals', RentalManager::class)->name('rentals');
     Route::get('/rentals/{rental:uuid}/details', ShowRental::class)->name('rentals.details');
+    Route::get('/rentals/quick', QuickRentManager::class)->name('quick.rent');
 
     // Módulos de Relatórios
     Route::get('/reports/customer-balance', CustomerBalance::class)->name('reports.customer-balance');

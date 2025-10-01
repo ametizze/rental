@@ -15,7 +15,7 @@
         @endif
 
         <div class="row g-4 mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3 col-sm-12">
                 <a href="{{ route('stock.sale') }}" class="card text-decoration-none shadow-sm h-100 border-info">
                     <div class="card-body text-center">
                         <i class="bi bi-cash-stack h3 text-info"></i>
@@ -25,7 +25,17 @@
                 </a>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3 col-sm-12">
+                <a href="{{ route('quick.rent') }}" class="card text-decoration-none shadow-sm h-100 border-success">
+                    <div class="card-body text-center">
+                        <i class="bi bi-speedometer2 h3 text-success"></i>
+                        <h4 class="card-title mt-2">{{ __('Quick Rent') }} {{ __('(Fast Check-Out)') }}</h4>
+                        <p class="text-muted">{{ __('Mark single equipment as rented instantly.') }}</p>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-3 col-sm-12">
                 <a href="{{ route('rentals') }}" class="card text-decoration-none shadow-sm h-100 border-primary">
                     <div class="card-body text-center">
                         <i class="bi bi-truck h3 text-primary"></i>
@@ -35,7 +45,7 @@
                 </a>
             </div>
 
-            <div class="col-md-4">
+            <div class="col-md-3 col-sm-12">
                 <a href="{{ route('invoices') }}" class="card text-decoration-none shadow-sm h-100 border-warning">
                     <div class="card-body text-center">
                         <i class="bi bi-receipt h3 text-warning"></i>

@@ -21,7 +21,8 @@ class Equipment extends Model
         'initial_cost',
         'purchase_date',
         'qr_uuid',
-        'tenant_id'
+        'tenant_id',
+        'ref_code', // New internal reference code
     ];
 
     protected $casts = [

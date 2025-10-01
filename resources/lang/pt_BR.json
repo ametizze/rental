@@ -252,5 +252,18 @@
     "Check receivables and collect payments.": "Verificar contas a receber e coletar pagamentos.",
     "Sell consumables immediately.": "Vender estoque imediato.",
     "Refresh Data": "Atualizar Dados",
-    "Are you sure you want to delete this invoice? Stock will be restored.": "Tem certeza de que deseja excluir esta fatura? O estoque será restaurado."
+    "Are you sure you want to delete this invoice? Stock will be restored.": "Tem certeza de que deseja excluir esta fatura? O estoque será restaurado.",
+    "Quick Rent": "Aluguel Rápido",
+    "Fast Check-Out": "Check-Out Rápido",
+    "Mark single equipment as rented instantly.": "Marcar rapidamente um único equipamento como alugado.",
+    "Equipment not found or is currently rented.": "Equipamento não encontrado ou atualmente alugado.",
+    "Equipment Reference Code": "Código de Referência do Equipamento",
+    "No available equipment found with this code.": "Nenhum equipamento disponível encontrado com este código.",
+    "Mark as Rented": "Marcar como Alugado",
+    "Mark as Rented Now": "Marcar como Alugado Agora",
+    "Enter code and press lookup.": "Digite o código e pressione pesquisar.",
+    "Lookup": "Pesquisar",
+    "New Quick Rental": "Novo Aluguel Rápido",
+    "Quick Rent Module": "Módulo de Aluguel Rápido",
+    "Rental created successfully for": "Aluguel criado com sucesso para"
 }
